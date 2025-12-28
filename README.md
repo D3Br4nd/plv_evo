@@ -20,146 +20,98 @@ PWA per la gestione di eventi e tesseramenti della Pro Loco Venticanese.
 - **Build**: Vite 5
 - **PWA**: vite-plugin-pwa
 
-## 📋 Prerequisiti
+## 🆕 Fresh Install (Docker)
 
-- Docker & Docker Compose
-- Rete Docker `plv_network` (per reverse proxy)
+Segui questi passaggi per avviare il progetto da zero su una nuova macchina.
 
-## 🛠️ Setup Locale
+### 1. Preparazione
 
-### 1. Clone e Dipendenze
+Clona il repository ed entra nella cartella:
 
 ```bash
-# Installa dipendenze PHP
+git clone <repository-url> plv_saas
+cd plv_saas
+```
+
+Crea il file `.env`:
+
+```bash
+cp .env.example .env
+```
+
+### 2. Installazione Dipendenze
+
+Installa le dipendenze di PHP e Node.js usando Docker (senza bisogno di avere PHP/Node installati localmente):
+
+```bash
+# Dipendenze PHP (Vendor)
 docker run --rm -v $(pwd):/app -w /app composer:2 install --ignore-platform-reqs
 
-# Installa dipendenze Node.js
-docker run --rm -v $(pwd):/app -w /app node:22-alpine npm install
-
-# Build assets
-docker run --rm -v $(pwd):/app -w /app node:22-alpine npm run build
+# Dipendenze Node.js (Node Modules)
+docker run --rm -v $(pwd):/app -w /app node:24-alpine npm install
 ```
 
-### 2. Avvio Stack
+### 3. Build & Avvio
+
+Compila gli asset e avvia i container:
 
 ```bash
-# Avvia i container
-docker compose up -d
+# Build degli asset frontend
+docker run --rm -v $(pwd):/app -w /app node:24-alpine npm run build
 
-# Verifica lo stato
-docker compose ps
+# Avvia lo stack
+docker compose up -d --build
 ```
 
-### 3. Database Setup
+### 4. Database Setup (Migrazioni e Seeders)
+
+Una volta che i container sono attivi (verifica con `docker compose ps`), esegui le migrazioni e il seeding del database:
+
+**IMPORTANTE**: Questo comando resetta il database e inserisce i dati di esempio.
 
 ```bash
-# Esegui migrazioni e seeder
-docker compose exec app php artisan migrate:fresh --seed --force
+docker compose exec app php artisan migrate:fresh --seed
 ```
 
-## 🌐 Deployment
+### 5. Accesso
 
-L'applicazione è configurata per funzionare dietro **Nginx Proxy Manager** sulla rete `plv_network`.
+- **Web App**: [http://localhost:8000](http://localhost:8000)
+- **Admin Login**: `admin@prolocoventicanese.it` / `password`
 
-**URL Produzione**: https://evo.prolocoventicano.com
+---
 
-### Configurazione Nginx Proxy Manager
+## 🔧 Comandi Utili per lo Sviluppo
 
-- **Scheme**: `http`
-- **Forward Hostname/IP**: `plv_saas-app-1` (o `app`)
-- **Forward Port**: `8000`
-- **Websockets Support**: ✅ Enabled (per Reverb)
+```bash
+# Logs in tempo reale
+docker compose logs -f
+
+# Accesso alla shell del container app
+docker compose exec app sh
+
+# Eseguire comandi Artisan
+docker compose exec app php artisan [command]
+
+# Riavviare i container
+docker compose restart
+```
 
 ## 📁 Struttura Progetto
 
 ```
 plv_saas/
 ├── app/
-│   ├── Http/
-│   │   └── Middleware/
-│   │       ├── HandleInertiaRequests.php
-│   │       └── TrustProxies.php
-│   └── Models/
-│       ├── User.php (UUIDv7)
-│       ├── Event.php (UUIDv7)
-│       └── Membership.php (UUIDv7)
+│   ├── Models/         # User, Event, Membership, Project (UUIDv7)
 ├── database/
-│   ├── migrations/
-│   │   └── 2025_01_01_000000_create_plv_schema.php
-│   └── seeders/
-│       └── DatabaseSeeder.php
+│   ├── migrations/     # 2025_01_01_000000_create_plv_schema.php (Squashed)
 ├── resources/
-│   ├── css/
-│   │   └── app.css (Tailwind 4 + Shadcn Theme)
-│   ├── js/
-│   │   ├── app.js
-│   │   └── Pages/
-│   │       └── Welcome.svelte
-│   └── views/
-│       └── app.blade.php
-├── docker/
-│   ├── pgsql/ (bind mount)
-│   └── redis/ (bind mount)
-├── Dockerfile
-├── docker-compose.yml
-└── .env
-```
-
-## 🗄️ Database
-
-### Schema
-
-- **users**: Utenti e membri (UUIDv7)
-- **events**: Eventi e manifestazioni (UUIDv7)
-- **memberships**: Tessere associative con QR code (UUIDv7)
-
-### Seeder Iniziale
-
-- Admin: `admin@prolocoventicanese.it` / `password`
-- Membro: `mario.rossi@example.com` / `password`
-- Eventi: Fiera Campionaria 2025, Sagra del Prosciutto 2025
-
-## 🎨 Styling
-
-Il progetto usa **Tailwind CSS 4** con configurazione CSS-first (no `tailwind.config.js`).
-
-Tema: **Shadcn Zinc** (Black Primary, White Background)
-
-Variabili CSS definite in `resources/css/app.css` usando la direttiva `@theme`.
-
-## 🔧 Comandi Utili
-
-```bash
-# Logs in tempo reale
-docker compose logs -f
-
-# Accesso shell container app
-docker compose exec app sh
-
-# Artisan commands
-docker compose exec app php artisan [command]
-
-# Clear cache
-docker compose exec app php artisan optimize:clear
-
-# Rebuild container
-docker compose down
-docker compose build --no-cache app
-docker compose up -d
+│   ├── js/Pages/       # Svelte Components (Admin/Members, Admin/Events, Admin/Projects)
+├── docker/             # Configurazioni e volumi persistenti
+├── Dockerfile          # FrankenPHP image definition
+├── docker-compose.yml  # Servizi: app, db, redis, reverb, vite
 ```
 
 ## 👥 Team
 
 - **Tech Lead**: Massimiliano
 - **Stack**: Bleeding Edge PHP Ecosystem
-
-## 📝 Note
-
-- Tutte le chiavi primarie usano **UUIDv7** (trait `HasUuids`)
-- Le migrazioni sono **consolidate** in un singolo file
-- Il tema è **strettamente monocromatico** (Zinc palette)
-- PWA configurato con manifest e service worker
-
----
-
-**Pro Loco Venticanese** - L'evoluzione della tradizione 🇮🇹
