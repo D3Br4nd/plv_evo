@@ -33,10 +33,12 @@
     // Navigation items
     const navItems = [
         { href: "/admin/dashboard", label: "Dashboard", icon: Home },
-        { href: "/admin/soci", label: "Soci", icon: Users },
-        { href: "/admin/eventi", label: "Eventi", icon: Calendar },
-        { href: "/admin/progetti", label: "Progetti", icon: Kanban },
+        { href: "/admin/members", label: "Soci", icon: Users },
+        { href: "/admin/events", label: "Eventi", icon: Calendar },
+        { href: "/admin/projects", label: "Progetti", icon: Kanban },
     ];
+    // State for user menu
+    let userMenuOpen = $state(false);
 </script>
 
 <div class="min-h-screen bg-background">
@@ -46,7 +48,14 @@
     >
         <div class="flex h-full flex-col">
             <!-- Logo/Brand -->
-            <div class="flex h-16 items-center border-b border-border px-6">
+            <div
+                class="flex h-16 items-center gap-3 border-b border-border px-6"
+            >
+                <img
+                    src="/logo.png"
+                    alt="Pro Loco"
+                    class="h-8 w-8 object-contain"
+                />
                 <h1 class="text-lg font-semibold text-foreground">
                     Pro Loco Admin
                 </h1>
@@ -88,6 +97,7 @@
             <!-- User Dropdown -->
             <div class="relative">
                 <button
+                    onclick={() => (userMenuOpen = !userMenuOpen)}
                     class="flex items-center gap-2 rounded-md px-3 py-2 text-sm font-medium text-foreground hover:bg-accent"
                 >
                     <div
@@ -100,20 +110,32 @@
                     >
                 </button>
 
-                <!-- Dropdown Menu (simplified - can be enhanced with proper dropdown later) -->
-                <div
-                    class="absolute right-0 mt-2 w-48 rounded-md border border-border bg-popover shadow-lg hidden"
-                >
-                    <Link
-                        href="/logout"
-                        method="post"
-                        as="button"
-                        class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-popover-foreground hover:bg-accent"
+                <!-- Dropdown Menu -->
+                {#if userMenuOpen}
+                    <!-- Backdrop to close on click outside -->
+                    <button
+                        class="fixed inset-0 z-40 cursor-default w-full h-full border-0 bg-transparent"
+                        onclick={() => (userMenuOpen = false)}
+                        onkeydown={(e) =>
+                            e.key === "Escape" && (userMenuOpen = false)}
+                        aria-label="Close user menu"
+                        type="button"
+                    ></button>
+
+                    <div
+                        class="absolute right-0 mt-2 w-48 rounded-md border border-border bg-popover shadow-lg z-50"
                     >
-                        <LogOut class="h-4 w-4" />
-                        <span>Logout</span>
-                    </Link>
-                </div>
+                        <Link
+                            href="/logout"
+                            method="post"
+                            as="button"
+                            class="flex w-full items-center gap-2 px-4 py-2 text-left text-sm text-popover-foreground hover:bg-accent"
+                        >
+                            <LogOut class="h-4 w-4" />
+                            <span>Logout</span>
+                        </Link>
+                    </div>
+                {/if}
             </div>
         </header>
 
@@ -144,9 +166,16 @@
                 <div
                     class="flex h-16 items-center justify-between border-b border-border px-6"
                 >
-                    <h1 class="text-lg font-semibold text-foreground">
-                        Pro Loco Admin
-                    </h1>
+                    <div class="flex items-center gap-3">
+                        <img
+                            src="/logo.png"
+                            alt="Pro Loco"
+                            class="h-8 w-8 object-contain"
+                        />
+                        <h1 class="text-lg font-semibold text-foreground">
+                            Pro Loco Admin
+                        </h1>
+                    </div>
                     <button
                         onclick={() => (mobileMenuOpen = false)}
                         class="rounded-md p-2 text-muted-foreground hover:bg-accent hover:text-accent-foreground"

@@ -1,0 +1,10 @@
+Attempting Connection:
+DSN: pgsql:host=db;port=5432;dbname=plv_saas;user=sail;password=password;sslmode=disable
+User: 'sail'
+Pass: 'password'
+Connection Failed: SQLSTATE[08006] [7] connection to server at "db" (172.18.0.18), port 5432 failed: FATAL:  password authentication failed for user "sail"
+Attempting Connection:
+DSN: pgsql:host=db;port=5432;dbname=plv_saas;user=sail;password=password;sslmode=disable
+User: 'sail'
+Pass: 'password'
+Connection Failed: SQLSTATE[08006] [7] connection to server at "db" (172.18.0.18), port 5432 failed: FATAL:  password authentication failed for user "sail"
