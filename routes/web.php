@@ -12,6 +12,7 @@ use App\Http\Controllers\MemberProfileController;
 use App\Http\Controllers\MemberOnboardingController;
 use App\Http\Controllers\MemberPasswordController;
 use App\Http\Controllers\MemberPushSubscriptionController;
+use App\Http\Controllers\MemberNotificationsController;
 use App\Http\Controllers\MemberUuidController;
 use App\Http\Controllers\PublicContentPageController;
 use Illuminate\Http\Request;
@@ -21,7 +22,7 @@ use Inertia\Inertia;
 Route::get('/', function () {
     if (auth()->check()) {
         $user = auth()->user();
-        $isAdmin = in_array($user->role, ['super_admin', 'direzione', 'segreteria'], true);
+        $isAdmin = in_array($user->role, ['super_admin', 'admin'], true);
 
         // Mobile: default to the PWA/mobile UI unless the user explicitly opted into the admin UI.
         $ua = strtolower((string) request()->userAgent());
@@ -60,10 +61,15 @@ Route::middleware('auth')->get('/me', [MemberHomeController::class, 'show'])->na
 Route::middleware('auth')->get('/me/uuid', [MemberUuidController::class, 'show'])->name('member.uuid');
 Route::middleware('auth')->get('/me/events', [MemberEventsController::class, 'index'])->name('member.events');
 Route::middleware('auth')->get('/me/profile', [MemberProfileController::class, 'show'])->name('member.profile');
+Route::middleware('auth')->patch('/me/profile', [MemberProfileController::class, 'update'])->name('member.profile.update');
+Route::middleware('auth')->post('/me/profile/avatar', [MemberProfileController::class, 'updateAvatar'])->name('member.profile.avatar');
+Route::middleware('auth')->delete('/me/profile/avatar', [MemberProfileController::class, 'destroyAvatar'])->name('member.profile.avatar.destroy');
 Route::middleware('auth')->get('/me/onboarding', [MemberOnboardingController::class, 'show'])->name('member.onboarding');
 Route::middleware('auth')->patch('/me/password', [MemberPasswordController::class, 'update'])->name('member.password.update');
 Route::middleware('auth')->post('/me/push-subscriptions', [MemberPushSubscriptionController::class, 'store'])->name('member.push-subscriptions.store');
 Route::middleware('auth')->delete('/me/push-subscriptions', [MemberPushSubscriptionController::class, 'destroy'])->name('member.push-subscriptions.destroy');
+Route::middleware('auth')->get('/me/notifications', [MemberNotificationsController::class, 'index'])->name('member.notifications');
+Route::middleware('auth')->delete('/me/notifications/{notificationId}', [MemberNotificationsController::class, 'destroy'])->name('member.notifications.destroy');
 
 // One-time invitation link (public)
 Route::get('/invite/{token}', [MemberInvitationAcceptController::class, 'show'])->name('invite.accept');
@@ -87,7 +93,7 @@ Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
 // Admin routes (protected)
-Route::middleware(['auth', 'role:super_admin,direzione,segreteria'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'role:super_admin,admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', AdminDashboardController::class)->name('admin.dashboard');
 
     Route::get('/profile', [AdminProfileController::class, 'edit'])->name('admin.profile.edit');

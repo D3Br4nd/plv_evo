@@ -3,9 +3,8 @@
 	import MemberBottomNav from "@/lib/components/member-bottom-nav.svelte";
 	import FlashToasts from "@/lib/components/FlashToasts.svelte";
 	import { Toaster } from "svelte-sonner";
-	import { Button } from "@/lib/components/ui/button";
 	import ThemeToggle from "@/lib/components/theme-toggle.svelte";
-	import { router, page } from "@inertiajs/svelte";
+	import { page } from "@inertiajs/svelte";
 
 	let { title = "Socio", children, headerActions } = $props();
 </script>
@@ -34,17 +33,6 @@
 			<div class="flex items-center gap-2">
 				{@render headerActions?.()}
 				<ThemeToggle />
-				<Button
-					variant="ghost"
-					size="icon"
-					onclick={() => router.post("/logout")}
-					aria-label="Esci"
-					title="Esci"
-				>
-					<span class="sr-only">Esci</span>
-					<!-- simple text fallback; icons live in pages/nav -->
-					<span class="text-sm">⎋</span>
-				</Button>
 			</div>
 		</div>
 	</header>

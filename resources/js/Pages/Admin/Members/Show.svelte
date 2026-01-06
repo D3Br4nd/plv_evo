@@ -246,7 +246,6 @@
                                 class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                             >
                                 <option value="">— Seleziona —</option>
-                                <option value="PLV Evo Admin">PLV Evo Admin</option>
                                 <option value="PRESIDENTE">PRESIDENTE</option>
                                 <option value="VICE PRESIDENTE">VICE PRESIDENTE</option>
                                 <option value="CASSIERE">CASSIERE</option>

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -45,7 +46,15 @@ class AdminEventController extends Controller
             'metadata' => 'nullable|array',
         ]);
 
-        Event::create($validated);
+        $event = Event::create($validated);
+
+        ActivityLog::create([
+            'actor_user_id' => $request->user()?->id,
+            'action' => 'created',
+            'subject_type' => 'Event',
+            'subject_id' => $event->id,
+            'summary' => 'Creato evento: '.$event->title,
+        ]);
 
         return redirect()->back()->with('success', 'Evento creato con successo.');
     }
@@ -65,6 +74,14 @@ class AdminEventController extends Controller
 
         $event->update($validated);
 
+        ActivityLog::create([
+            'actor_user_id' => $request->user()?->id,
+            'action' => 'updated',
+            'subject_type' => 'Event',
+            'subject_id' => $event->id,
+            'summary' => 'Aggiornato evento: '.$event->title,
+        ]);
+
         return redirect()->back()->with('success', 'Evento aggiornato con successo.');
     }
 
@@ -73,7 +90,16 @@ class AdminEventController extends Controller
      */
     public function destroy(Event $event)
     {
+        $summary = 'Eliminato evento: '.$event->title;
         $event->delete();
+
+        ActivityLog::create([
+            'actor_user_id' => request()->user()?->id,
+            'action' => 'deleted',
+            'subject_type' => 'Event',
+            'subject_id' => $event->id,
+            'summary' => $summary,
+        ]);
 
         return redirect()->back()->with('success', 'Evento eliminato con successo.');
     }

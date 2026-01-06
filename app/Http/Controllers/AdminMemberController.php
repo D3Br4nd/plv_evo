@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
+use App\Models\ActivityLog;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -19,7 +20,6 @@ use Illuminate\Support\Facades\Mail;
 class AdminMemberController extends Controller
 {
     private const PLV_ROLES = [
-        'PLV Evo Admin',
         'PRESIDENTE',
         'VICE PRESIDENTE',
         'CASSIERE',
@@ -120,7 +120,7 @@ class AdminMemberController extends Controller
         $validated = $request->validate([
             'name' => 'required|string|max:255',
             'email' => 'required|string|email|max:255|unique:users',
-            'role' => 'required|string|in:super_admin,direzione,segreteria,member',
+            'role' => 'required|string|in:super_admin,admin,member',
             'plv_role' => ['sometimes', 'nullable', Rule::in(self::PLV_ROLES)],
 
             'first_name' => 'sometimes|nullable|string|max:255',
@@ -167,6 +167,14 @@ class AdminMemberController extends Controller
             'must_set_password' => true,
             'membership_status' => 'inactive',
         ]));
+
+        ActivityLog::create([
+            'actor_user_id' => $request->user()?->id,
+            'action' => 'created',
+            'subject_type' => 'User',
+            'subject_id' => $member->id,
+            'summary' => 'Creato socio: '.$member->name.($member->email ? ' ('.$member->email.')' : ''),
+        ]);
 
         // Create invitation + email
         $token = Str::random(64);
@@ -228,7 +236,7 @@ class AdminMemberController extends Controller
             'plv_joined_at' => 'sometimes|nullable|date',
             // plv_expires_at is computed server-side from plv_joined_at (1 year)
 
-            'role' => 'sometimes|required|string|in:super_admin,direzione,segreteria,member',
+            'role' => 'sometimes|required|string|in:super_admin,admin,member',
         ]);
 
         // Safety net: if migrations haven't run yet (e.g. during deploy), avoid writing to missing columns.
@@ -253,6 +261,14 @@ class AdminMemberController extends Controller
 
         $member->update($validated);
 
+        ActivityLog::create([
+            'actor_user_id' => $request->user()?->id,
+            'action' => 'updated',
+            'subject_type' => 'User',
+            'subject_id' => $member->id,
+            'summary' => 'Aggiornato socio: '.$member->name.($member->email ? ' ('.$member->email.')' : ''),
+        ]);
+
         return redirect()->back()->with('success', 'Socio aggiornato con successo.');
     }
 
@@ -261,7 +277,16 @@ class AdminMemberController extends Controller
      */
     public function destroy(User $member)
     {
+        $summary = 'Eliminato socio: '.$member->name.($member->email ? ' ('.$member->email.')' : '');
         $member->delete();
+
+        ActivityLog::create([
+            'actor_user_id' => request()->user()?->id,
+            'action' => 'deleted',
+            'subject_type' => 'User',
+            'subject_id' => $member->id,
+            'summary' => $summary,
+        ]);
 
         return redirect()->back()->with('success', 'Socio eliminato con successo.');
     }

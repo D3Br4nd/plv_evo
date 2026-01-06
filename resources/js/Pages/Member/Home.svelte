@@ -28,10 +28,10 @@
 <MemberLayout title="Home">
     <div class="space-y-4">
         <div class="rounded-xl border bg-card p-4">
-            <div class="text-sm text-muted-foreground">
-                {greeting()}, <span class="font-medium text-foreground">{fullName(user)}</span>
+            <div class="text-sm">
+                <span class="text-muted-foreground">{greeting()}</span>
+                <span class="font-medium"> {fullName(user)}!</span>
             </div>
-            <div class="mt-1 text-sm">Pronto per oggi?</div>
         </div>
 
         <Link

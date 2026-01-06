@@ -3,6 +3,19 @@
 	import * as Sidebar from "@/lib/components/ui/sidebar/index.js";
 
 	let { title = "Dashboard", headerActions } = $props();
+
+	function todayLabel() {
+		try {
+			return new Date().toLocaleDateString("it-IT", {
+				weekday: "short",
+				day: "2-digit",
+				month: "long",
+				year: "numeric",
+			});
+		} catch {
+			return "";
+		}
+	}
 </script>
 
 <header
@@ -13,6 +26,7 @@
 		<Separator orientation="vertical" class="mx-2 data-[orientation=vertical]:h-4" />
 		<h1 class="text-base font-medium">{title}</h1>
 		<div class="ms-auto flex items-center gap-2">
+			<span class="hidden text-sm text-muted-foreground md:inline">{todayLabel()}</span>
 			{@render headerActions?.()}
 		</div>
 	</div>

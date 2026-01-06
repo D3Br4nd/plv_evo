@@ -45,7 +45,7 @@ class AuthController extends Controller
             $request->session()->regenerate();
 
             $user = $request->user();
-            $isAdmin = in_array($user->role, ['super_admin', 'direzione', 'segreteria'], true);
+            $isAdmin = in_array($user->role, ['super_admin', 'admin'], true);
 
             // If the user is entering from the PWA/member area, always honor the intended /me* URL
             // even for admin roles. This keeps the mobile/PWA experience on /me.

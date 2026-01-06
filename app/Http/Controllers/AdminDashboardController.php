@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\Event;
+use App\Models\ActivityLog;
 use App\Models\Membership;
 use App\Models\Project;
 use App\Models\User;
@@ -24,6 +25,11 @@ class AdminDashboardController extends Controller
                 'projectsTotal' => Project::count(),
                 'projectsDone' => Project::where('status', 'done')->count(),
             ],
+            'activity' => ActivityLog::query()
+                ->with('actor:id,name')
+                ->latest()
+                ->paginate(20)
+                ->withQueryString(),
         ]);
     }
 }

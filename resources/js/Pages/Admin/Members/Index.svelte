@@ -119,10 +119,8 @@
         switch (role) {
             case "super_admin":
                 return "Super Admin";
-            case "direzione":
-                return "Direzione";
-            case "segreteria":
-                return "Segreteria";
+            case "admin":
+                return "Admin";
             case "member":
                 return "Socio";
             default:
@@ -240,11 +238,20 @@
                             <Table.Row>
                                 <Table.Cell class="font-medium">
                                     <div class="flex items-center gap-3">
-                                        <div
-                                            class="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-secondary-foreground text-xs font-semibold"
-                                        >
-                                                    {user.name?.charAt(0)?.toUpperCase?.() || "U"}
-                                                </div>
+                                        {#if user.avatar_url}
+                                            <img
+                                                src={user.avatar_url}
+                                                alt={user.name}
+                                                class="h-8 w-8 rounded-full object-cover border bg-background"
+                                                loading="lazy"
+                                            />
+                                        {:else}
+                                            <div
+                                                class="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-secondary-foreground text-xs font-semibold"
+                                            >
+                                                {user.name?.charAt(0)?.toUpperCase?.() || "U"}
+                                            </div>
+                                        {/if}
                                                 <div class="min-w-0">
                                                     <div class="truncate">{user.name}</div>
                                                     <div class="truncate text-xs text-muted-foreground">
@@ -272,8 +279,7 @@
                                             class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm"
                                         >
                                                     <option value="super_admin">Super Admin</option>
-                                            <option value="direzione">Direzione</option>
-                                            <option value="segreteria">Segreteria</option>
+                                            <option value="admin">Admin</option>
                                             <option value="member">Socio</option>
                                         </select>
                                     {:else}

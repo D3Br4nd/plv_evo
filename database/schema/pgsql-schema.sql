@@ -2,7 +2,7 @@
 -- PostgreSQL database dump
 --
 
-\restrict AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+\restrict QgYjDoEmIPIS764X3UvmEuLyaDC7MSgzzjNQXNNRZjoQnIKDifiof5fb17Z6UDy
 
 -- Dumped from database version 18.1 (Debian 18.1-1.pgdg13+2)
 -- Dumped by pg_dump version 18.1 (Debian 18.1-1.pgdg13+2)
@@ -22,6 +22,23 @@ SET row_security = off;
 SET default_tablespace = '';
 
 SET default_table_access_method = heap;
+
+--
+-- Name: activity_logs; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.activity_logs (
+    id uuid NOT NULL,
+    actor_user_id uuid,
+    action character varying(255) NOT NULL,
+    subject_type character varying(255) NOT NULL,
+    subject_id uuid,
+    summary text NOT NULL,
+    meta json,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone
+);
+
 
 --
 -- Name: content_pages; Type: TABLE; Schema: public; Owner: -
@@ -137,6 +154,22 @@ ALTER SEQUENCE public.migrations_id_seq OWNED BY public.migrations.id;
 
 
 --
+-- Name: notifications; Type: TABLE; Schema: public; Owner: -
+--
+
+CREATE TABLE public.notifications (
+    id uuid NOT NULL,
+    type character varying(255) NOT NULL,
+    notifiable_type character varying(255) NOT NULL,
+    notifiable_id uuid NOT NULL,
+    data text NOT NULL,
+    read_at timestamp(0) without time zone,
+    created_at timestamp(0) without time zone,
+    updated_at timestamp(0) without time zone
+);
+
+
+--
 -- Name: password_reset_tokens; Type: TABLE; Schema: public; Owner: -
 --
 
@@ -226,7 +259,9 @@ CREATE TABLE public.users (
     plv_joined_at date,
     plv_expires_at date,
     phone character varying(255),
-    must_set_password boolean DEFAULT false NOT NULL
+    must_set_password boolean DEFAULT false NOT NULL,
+    avatar_path character varying(255),
+    plv_role character varying(255)
 );
 
 
@@ -235,6 +270,14 @@ CREATE TABLE public.users (
 --
 
 ALTER TABLE ONLY public.migrations ALTER COLUMN id SET DEFAULT nextval('public.migrations_id_seq'::regclass);
+
+
+--
+-- Name: activity_logs activity_logs_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.activity_logs
+    ADD CONSTRAINT activity_logs_pkey PRIMARY KEY (id);
 
 
 --
@@ -326,6 +369,14 @@ ALTER TABLE ONLY public.migrations
 
 
 --
+-- Name: notifications notifications_pkey; Type: CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.notifications
+    ADD CONSTRAINT notifications_pkey PRIMARY KEY (id);
+
+
+--
 -- Name: password_reset_tokens password_reset_tokens_pkey; Type: CONSTRAINT; Schema: public; Owner: -
 --
 
@@ -382,6 +433,20 @@ ALTER TABLE ONLY public.users
 
 
 --
+-- Name: activity_logs_actor_user_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX activity_logs_actor_user_id_index ON public.activity_logs USING btree (actor_user_id);
+
+
+--
+-- Name: activity_logs_subject_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX activity_logs_subject_id_index ON public.activity_logs USING btree (subject_id);
+
+
+--
 -- Name: content_pages_status_published_at_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -403,6 +468,13 @@ CREATE INDEX member_invitations_user_id_expires_at_index ON public.member_invita
 
 
 --
+-- Name: notifications_notifiable_type_notifiable_id_index; Type: INDEX; Schema: public; Owner: -
+--
+
+CREATE INDEX notifications_notifiable_type_notifiable_id_index ON public.notifications USING btree (notifiable_type, notifiable_id);
+
+
+--
 -- Name: sessions_last_activity_index; Type: INDEX; Schema: public; Owner: -
 --
 
@@ -414,6 +486,14 @@ CREATE INDEX sessions_last_activity_index ON public.sessions USING btree (last_a
 --
 
 CREATE INDEX sessions_user_id_index ON public.sessions USING btree (user_id);
+
+
+--
+-- Name: activity_logs activity_logs_actor_user_id_foreign; Type: FK CONSTRAINT; Schema: public; Owner: -
+--
+
+ALTER TABLE ONLY public.activity_logs
+    ADD CONSTRAINT activity_logs_actor_user_id_foreign FOREIGN KEY (actor_user_id) REFERENCES public.users(id) ON DELETE SET NULL;
 
 
 --
@@ -500,5 +580,60 @@ ALTER TABLE ONLY public.push_subscriptions
 -- PostgreSQL database dump complete
 --
 
-\unrestrict AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+\unrestrict QgYjDoEmIPIS764X3UvmEuLyaDC7MSgzzjNQXNNRZjoQnIKDifiof5fb17Z6UDy
+
+--
+-- PostgreSQL database dump
+--
+
+\restrict 3HEQx2LBb5iaOSfJgcoXQ0kyOnbaCa1D0junCCPhZEclIZg1yNtE9CIipTyzEmb
+
+-- Dumped from database version 18.1 (Debian 18.1-1.pgdg13+2)
+-- Dumped by pg_dump version 18.1 (Debian 18.1-1.pgdg13+2)
+
+SET statement_timeout = 0;
+SET lock_timeout = 0;
+SET idle_in_transaction_session_timeout = 0;
+SET transaction_timeout = 0;
+SET client_encoding = 'UTF8';
+SET standard_conforming_strings = on;
+SELECT pg_catalog.set_config('search_path', '', false);
+SET check_function_bodies = false;
+SET xmloption = content;
+SET client_min_messages = warning;
+SET row_security = off;
+
+--
+-- Data for Name: migrations; Type: TABLE DATA; Schema: public; Owner: -
+--
+
+COPY public.migrations (id, migration, batch) FROM stdin;
+1	2025_01_01_000000_create_plv_schema	1
+2	2026_01_03_000001_create_event_checkins_table	1
+3	2026_01_03_000002_create_content_pages_table	1
+4	2026_01_05_000001_add_member_profile_fields_to_users_table	2
+5	2026_01_05_000002_add_must_set_password_to_users_table	3
+6	2026_01_05_000003_create_member_invitations_table	3
+7	2026_01_05_000004_create_push_subscriptions_table	3
+8	2026_01_06_000001_add_avatar_path_to_users_table	4
+9	2026_01_06_000002_add_avatar_path_to_users_table	5
+10	2026_01_06_000003_add_plv_role_to_users_table	6
+11	2026_01_06_000004_migrate_user_roles_to_admin_super_admin	7
+12	2026_01_06_000005_create_notifications_table	8
+13	2026_01_06_000006_create_activity_logs_table	9
+\.
+
+
+--
+-- Name: migrations_id_seq; Type: SEQUENCE SET; Schema: public; Owner: -
+--
+
+SELECT pg_catalog.setval('public.migrations_id_seq', 13, true);
+
+
+--
+-- PostgreSQL database dump complete
+--
+
+\unrestrict 3HEQx2LBb5iaOSfJgcoXQ0kyOnbaCa1D0junCCPhZEclIZg1yNtE9CIipTyzEmb
 

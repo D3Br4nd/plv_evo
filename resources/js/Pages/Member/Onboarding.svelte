@@ -54,8 +54,15 @@
     }
 
     let notificationStatus = $state("");
+    let pushEnabled = $state(false);
+    let pushProcessing = $state(false);
+
+    $effect(() => {
+        pushEnabled = !!hasPushSubscription;
+    });
 
     async function enableNotifications() {
+        if (pushProcessing) return;
         if (!("Notification" in window) || !("serviceWorker" in navigator)) {
             notificationStatus = "Notifiche non supportate su questo browser.";
             return;
@@ -66,31 +73,85 @@
             return;
         }
 
-        const permission = await Notification.requestPermission();
-        if (permission !== "granted") {
-            notificationStatus = "Permesso notifiche non concesso.";
+        pushProcessing = true;
+        try {
+            const permission = await Notification.requestPermission();
+            if (permission !== "granted") {
+                notificationStatus = "Permesso notifiche non concesso.";
+                return;
+            }
+
+            const reg = await navigator.serviceWorker.ready;
+            const sub = await reg.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
+            });
+
+            const res = await fetch("/me/push-subscriptions", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRF-TOKEN": document
+                        .querySelector('meta[name="csrf-token"]')
+                        ?.getAttribute("content"),
+                },
+                body: JSON.stringify(sub),
+            });
+
+            if (!res.ok) {
+                pushEnabled = false;
+                notificationStatus =
+                    "Errore durante la registrazione sul server: riprova.";
+                return;
+            }
+
+            pushEnabled = true;
+            notificationStatus = "Notifiche abilitate.";
+        } catch (e) {
+            pushEnabled = false;
+            notificationStatus = "Errore: impossibile abilitare le notifiche.";
+        } finally {
+            pushProcessing = false;
+        }
+    }
+
+    async function disableNotifications() {
+        if (pushProcessing) return;
+        if (!("serviceWorker" in navigator)) {
+            notificationStatus = "Notifiche non supportate su questo browser.";
             return;
         }
 
-        const reg = await navigator.serviceWorker.ready;
-        const sub = await reg.pushManager.subscribe({
-            userVisibleOnly: true,
-            applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
-        });
+        pushProcessing = true;
+        try {
+            const reg = await navigator.serviceWorker.ready;
+            const sub = await reg.pushManager.getSubscription();
+            if (sub) await sub.unsubscribe();
 
-        await fetch("/me/push-subscriptions", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRF-TOKEN": document
-                    .querySelector('meta[name="csrf-token"]')
-                    ?.getAttribute("content"),
-            },
-            body: JSON.stringify(sub),
-        });
+            const res = await fetch("/me/push-subscriptions", {
+                method: "DELETE",
+                headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                    "X-CSRF-TOKEN": document
+                        .querySelector('meta[name="csrf-token"]')
+                        ?.getAttribute("content"),
+                },
+            });
 
-        notificationStatus = "Notifiche abilitate.";
+            if (!res.ok) {
+                notificationStatus =
+                    "Errore durante la disattivazione sul server: riprova.";
+                return;
+            }
+
+            pushEnabled = false;
+            notificationStatus = "Notifiche disabilitate.";
+        } catch (e) {
+            notificationStatus = "Errore: impossibile disabilitare le notifiche.";
+        } finally {
+            pushProcessing = false;
+        }
     }
 </script>
 
@@ -136,14 +197,20 @@
                 </Card.Description>
             </Card.Header>
             <Card.Content class="space-y-3">
-                {#if hasPushSubscription}
+                {#if pushEnabled}
                     <div class="text-sm text-muted-foreground">
                         Notifiche: già abilitate su questo account.
                     </div>
                 {/if}
-                <Button onclick={enableNotifications}>
-                    Abilita notifiche
-                </Button>
+                {#if pushEnabled}
+                    <Button variant="outline" onclick={disableNotifications} disabled={pushProcessing}>
+                        Disabilita notifiche
+                    </Button>
+                {:else}
+                    <Button onclick={enableNotifications} disabled={pushProcessing}>
+                        Abilita notifiche
+                    </Button>
+                {/if}
                 {#if notificationStatus}
                     <div class="text-sm text-muted-foreground">{notificationStatus}</div>
                 {/if}

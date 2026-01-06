@@ -127,8 +127,7 @@
                                 class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                             >
                                 <option value="member">Socio</option>
-                                <option value="segreteria">Segreteria</option>
-                                <option value="direzione">Direzione</option>
+                                <option value="admin">Admin</option>
                                 <option value="super_admin">Super Admin</option>
                             </select>
                         {:else}
@@ -145,7 +144,6 @@
                             class="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
                         >
                             <option value="">— Seleziona —</option>
-                            <option value="PLV Evo Admin">PLV Evo Admin</option>
                             <option value="PRESIDENTE">PRESIDENTE</option>
                             <option value="VICE PRESIDENTE">VICE PRESIDENTE</option>
                             <option value="CASSIERE">CASSIERE</option>

@@ -44,7 +44,9 @@ class AdminProfileController extends Controller
             Storage::disk('public')->delete($user->avatar_path);
         }
 
-        $path = $validated['avatar']->storePublicly('avatars', 'public');
+        $dir = $user->id.'/avatar';
+        $ext = $validated['avatar']->extension() ?: 'jpg';
+        $path = $validated['avatar']->storePubliclyAs($dir, 'avatar.'.$ext, 'public');
 
         $user->update([
             'avatar_path' => $path,

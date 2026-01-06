@@ -12,8 +12,14 @@ class AdminMemberRoleController extends Controller
         $this->authorize('manage-roles');
 
         $validated = $request->validate([
-            'role' => 'required|string|in:super_admin,direzione,segreteria,member',
+            'role' => 'required|string|in:super_admin,admin,member',
         ]);
+
+        // Admin users cannot demote a Super Admin.
+        // Super Admin may change themselves (including removing their own super_admin role if desired).
+        if ($member->role === 'super_admin' && $request->user()?->role !== 'super_admin') {
+            abort(403);
+        }
 
         $member->update([
             'role' => $validated['role'],

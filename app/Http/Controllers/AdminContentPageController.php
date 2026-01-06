@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\ActivityLog;
 use App\Models\ContentPage;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -33,7 +34,7 @@ class AdminContentPageController extends Controller
 
         $slug = $validated['slug'] ?: Str::slug($validated['title']);
 
-        ContentPage::create([
+        $page = ContentPage::create([
             'title' => $validated['title'],
             'slug' => $slug,
             'excerpt' => $validated['excerpt'] ?? null,
@@ -42,6 +43,15 @@ class AdminContentPageController extends Controller
             'published_at' => $validated['status'] === 'published' ? now() : null,
             'created_by_user_id' => $request->user()->id,
             'updated_by_user_id' => $request->user()->id,
+        ]);
+
+        ActivityLog::create([
+            'actor_user_id' => $request->user()?->id,
+            'action' => 'created',
+            'subject_type' => 'ContentPage',
+            'subject_id' => $page->id,
+            'summary' => 'Creata pagina contenuto: '.$page->title,
+            'meta' => ['slug' => $page->slug],
         ]);
 
         return redirect()->back()->with('success', 'Pagina creata.');
@@ -69,12 +79,32 @@ class AdminContentPageController extends Controller
             'updated_by_user_id' => $request->user()->id,
         ]);
 
+        ActivityLog::create([
+            'actor_user_id' => $request->user()?->id,
+            'action' => 'updated',
+            'subject_type' => 'ContentPage',
+            'subject_id' => $content_page->id,
+            'summary' => 'Aggiornata pagina contenuto: '.$content_page->title,
+            'meta' => ['slug' => $content_page->slug],
+        ]);
+
         return redirect()->back()->with('success', 'Pagina aggiornata.');
     }
 
     public function destroy(ContentPage $content_page)
     {
+        $summary = 'Eliminata pagina contenuto: '.$content_page->title;
         $content_page->delete();
+
+        ActivityLog::create([
+            'actor_user_id' => request()->user()?->id,
+            'action' => 'deleted',
+            'subject_type' => 'ContentPage',
+            'subject_id' => $content_page->id,
+            'summary' => $summary,
+            'meta' => ['slug' => $content_page->slug],
+        ]);
+
         return redirect()->back()->with('success', 'Pagina eliminata.');
     }
 }

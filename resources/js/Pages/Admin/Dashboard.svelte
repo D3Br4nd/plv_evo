@@ -2,7 +2,14 @@
     import AdminLayout from "../../layouts/AdminLayout.svelte";
     import { Button } from "@/lib/components/ui/button";
     import { router } from "@inertiajs/svelte";
-    let { stats } = $props();
+    import * as Card from "@/lib/components/ui/card";
+    import * as Table from "@/lib/components/ui/table";
+    let { stats, activity } = $props();
+
+    function go(url) {
+        if (!url) return;
+        router.get(url, {}, { preserveScroll: true });
+    }
 </script>
 
 <AdminLayout title="Dashboard">
@@ -76,11 +83,72 @@
             </div>
         </div>
 
-        <div class="rounded-lg border border-border bg-card p-6">
-            <h2 class="text-lg font-semibold text-foreground">Attività recente</h2>
-            <p class="mt-2 text-sm text-muted-foreground">
-                Nessuna attività da mostrare (sezione in arrivo).
-            </p>
-        </div>
+        <Card.Root>
+            <Card.Header>
+                <Card.Title>Attività recenti</Card.Title>
+                <Card.Description>
+                    Operazioni su soci, eventi, task e contenuti.
+                </Card.Description>
+            </Card.Header>
+            <Card.Content class="p-0">
+                <Table.Root>
+                    <Table.Header class="bg-muted">
+                        <Table.Row>
+                            <Table.Head>Quando</Table.Head>
+                            <Table.Head>Chi</Table.Head>
+                            <Table.Head>Cosa</Table.Head>
+                        </Table.Row>
+                    </Table.Header>
+                    <Table.Body>
+                        {#if activity?.data?.length}
+                            {#each activity.data as a (a.id)}
+                                <Table.Row>
+                                    <Table.Cell class="text-xs text-muted-foreground">
+                                        {new Date(a.created_at).toLocaleString("it-IT")}
+                                    </Table.Cell>
+                                    <Table.Cell class="text-sm">
+                                        {a.actor?.name || "Sistema"}
+                                    </Table.Cell>
+                                    <Table.Cell class="text-sm">
+                                        {a.summary}
+                                    </Table.Cell>
+                                </Table.Row>
+                            {/each}
+                        {:else}
+                            <Table.Row>
+                                <Table.Cell colspan="3" class="text-sm text-muted-foreground">
+                                    Nessuna attività da mostrare.
+                                </Table.Cell>
+                            </Table.Row>
+                        {/if}
+                    </Table.Body>
+                </Table.Root>
+            </Card.Content>
+            {#if activity?.links?.length}
+                <Card.Content class="flex items-center justify-between gap-3 border-t p-4">
+                    <div class="text-xs text-muted-foreground">
+                        {activity?.meta?.from || 0}-{activity?.meta?.to || 0} di {activity?.meta?.total || 0}
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={!activity?.prev_page_url}
+                            onclick={() => go(activity?.prev_page_url)}
+                        >
+                            Precedente
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            disabled={!activity?.next_page_url}
+                            onclick={() => go(activity?.next_page_url)}
+                        >
+                            Successiva
+                        </Button>
+                    </div>
+                </Card.Content>
+            {/if}
+        </Card.Root>
     </div>
 </AdminLayout>

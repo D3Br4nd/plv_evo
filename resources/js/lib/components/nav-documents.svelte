@@ -34,7 +34,7 @@
 								class="data-[state=open]:bg-accent rounded-sm"
 							>
 								<DotsIcon />
-								<span class="sr-only">More</span>
+								<span class="sr-only">Azioni</span>
 							</Sidebar.MenuAction>
 						{/snippet}
 					</DropdownMenu.Trigger>
@@ -60,11 +60,5 @@
 				</DropdownMenu.Root>
 			</Sidebar.MenuItem>
 		{/each}
-		<Sidebar.MenuItem>
-			<Sidebar.MenuButton class="text-sidebar-foreground/70">
-				<DotsIcon class="text-sidebar-foreground/70" />
-				<span>Altro</span>
-			</Sidebar.MenuButton>
-		</Sidebar.MenuItem>
 	</Sidebar.Menu>
 </Sidebar.Group>

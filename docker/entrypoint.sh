@@ -1,6 +1,18 @@
 #!/usr/bin/env sh
 set -eu
 
+# Ensure persistent storage directories exist and are writable (bind-mounted in docker-compose.yml).
+# This helps avoid silent upload failures (avatars, etc.) when running with bind mounts.
+mkdir -p /app/storage/app/public || true
+
+# Ensure the public/storage symlink points to the mounted storage folder.
+# In dev, /app/public may be bind-mounted, so we recreate the symlink on each start.
+rm -rf /app/public/storage || true
+ln -s /app/storage/app/public /app/public/storage || true
+
+# Best-effort permissions (container usually runs as root in our image).
+chmod -R 775 /app/storage /app/bootstrap/cache 2>/dev/null || true
+
 # Clear Laravel caches on container start.
 # This avoids stale route/config/view caches when /app/storage is mounted as a persistent volume.
 #

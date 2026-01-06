@@ -32,3 +32,4 @@ Thumbs.db
 # Docker
 /docker/pgsql
 /docker/redis
+/docker/storage
