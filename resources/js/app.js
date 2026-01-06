@@ -1,7 +1,7 @@
 import { createInertiaApp } from '@inertiajs/svelte'
 import { mount } from 'svelte'
 import '../css/app.css';
-import { registerSW } from 'virtual:pwa-register';
+// import { registerSW } from 'virtual:pwa-register';
 
 createInertiaApp({
     resolve: name => {
@@ -14,17 +14,23 @@ createInertiaApp({
 })
 
 // PWA service worker registration.
-// To reduce "stuck navigation" after deploys (stale cached assets), auto-refresh when a new SW is available.
-if (import.meta.env.PROD) {
-    let updateSW;
-    let didRefresh = false;
-    updateSW = registerSW({
-        immediate: true,
-        onNeedRefresh() {
-            // Hard refresh to ensure JS/CSS chunks are consistent.
-            if (didRefresh) return;
-            didRefresh = true;
-            updateSW(true);
-        },
-    });
+// Manual PWA service worker registration to ensure root scope and correct path.
+if (import.meta.env.PROD && 'serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js', { scope: '/' })
+        .then((reg) => {
+            console.log('SW Registered!', reg);
+
+            // Optional: Handle updates
+            reg.addEventListener('updatefound', () => {
+                const newWorker = reg.installing;
+                newWorker.addEventListener('statechange', () => {
+                    if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                        // New content available, force refresh or notify user
+                        console.log('New SW content available, reloading...');
+                        // window.location.reload(); 
+                    }
+                });
+            });
+        })
+        .catch((err) => console.error('SW Register Error:', err));
 }

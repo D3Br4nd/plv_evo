@@ -18,10 +18,13 @@
 
     function urlBase64ToUint8Array(base64String) {
         const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-        const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+        const base64 = (base64String + padding)
+            .replace(/-/g, "+")
+            .replace(/_/g, "/");
         const rawData = atob(base64);
         const outputArray = new Uint8Array(rawData.length);
-        for (let i = 0; i < rawData.length; ++i) outputArray[i] = rawData.charCodeAt(i);
+        for (let i = 0; i < rawData.length; ++i)
+            outputArray[i] = rawData.charCodeAt(i);
         return outputArray;
     }
 
@@ -119,23 +122,15 @@
 </script>
 
 <MemberLayout title="Notifiche">
-    {#snippet headerActions()}
-        {#if pushEnabled}
-            <Button variant="outline" disabled={processing} onclick={disablePush}>
-                Disabilita
-            </Button>
-        {:else}
-            <Button disabled={processing} onclick={enablePush}>
-                Abilita
-            </Button>
-        {/if}
-    {/snippet}
+    {#snippet headerActions()}{/snippet}
 
     <div class="space-y-4">
         <Card.Root>
             <Card.Header>
                 <Card.Title>Notifiche</Card.Title>
-                <Card.Description>Le notifiche restano qui finché non le elimini.</Card.Description>
+                <Card.Description
+                    >Le notifiche restano qui finché non le elimini.</Card.Description
+                >
             </Card.Header>
             <Card.Content class="space-y-3">
                 {#if notifications?.data?.length}
@@ -143,12 +138,22 @@
                         <div class="rounded-lg border p-3">
                             <div class="flex items-start justify-between gap-3">
                                 <div class="min-w-0">
-                                    <div class="font-medium truncate">{titleOf(n)}</div>
+                                    <div class="font-medium truncate">
+                                        {titleOf(n)}
+                                    </div>
                                     {#if bodyOf(n)}
-                                        <div class="mt-1 text-xs text-muted-foreground">{bodyOf(n)}</div>
+                                        <div
+                                            class="mt-1 text-xs text-muted-foreground"
+                                        >
+                                            {bodyOf(n)}
+                                        </div>
                                     {/if}
-                                    <div class="mt-2 text-[11px] text-muted-foreground">
-                                        {new Date(n.created_at).toLocaleString("it-IT")}
+                                    <div
+                                        class="mt-2 text-[11px] text-muted-foreground"
+                                    >
+                                        {new Date(n.created_at).toLocaleString(
+                                            "it-IT",
+                                        )}
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-2">
@@ -160,7 +165,8 @@
                                     <Button
                                         variant="destructive"
                                         size="sm"
-                                        onclick={() => destroyNotification(n.id)}
+                                        onclick={() =>
+                                            destroyNotification(n.id)}
                                     >
                                         Elimina
                                     </Button>
@@ -169,11 +175,11 @@
                         </div>
                     {/each}
                 {:else}
-                    <div class="text-sm text-muted-foreground">Nessuna notifica.</div>
+                    <div class="text-sm text-muted-foreground">
+                        Nessuna notifica.
+                    </div>
                 {/if}
             </Card.Content>
         </Card.Root>
     </div>
 </MemberLayout>
-
-

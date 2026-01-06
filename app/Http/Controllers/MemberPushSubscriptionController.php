@@ -41,6 +41,7 @@ class MemberPushSubscriptionController extends Controller
 
         PushSubscription::query()
             ->where('user_id', $user->id)
+            ->where('endpoint', $request->input('endpoint'))
             ->delete();
 
         return response()->json(['ok' => true]);

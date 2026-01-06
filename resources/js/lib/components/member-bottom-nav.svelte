@@ -6,11 +6,12 @@
     import { cn } from "@/lib/utils/cn";
     import { buttonVariants } from "@/lib/components/ui/button";
 
-    let path = $derived($page.url?.pathname || "");
+    // Use derived directly from the store to ensure reactivity
+    let currentPath = $derived($page.url ? $page.url.split("?")[0] : "");
 
     function isActive(href) {
-        if (href === "/me") return path === "/me";
-        return path.startsWith(href);
+        if (href === "/me") return currentPath === "/me";
+        return currentPath.startsWith(href);
     }
 
     const items = [
@@ -30,8 +31,11 @@
             <Link
                 href={item.href}
                 class={cn(
-                    buttonVariants({ variant: isActive(item.href) ? "secondary" : "ghost" }),
-                    "h-12 flex-col gap-1 text-xs"
+                    buttonVariants({ variant: "ghost" }),
+                    "h-12 flex-col gap-1 text-xs",
+                    isActive(item.href)
+                        ? "!text-blue-600 font-medium"
+                        : "text-muted-foreground",
                 )}
             >
                 <item.icon class="size-5" />
@@ -40,5 +44,3 @@
         {/each}
     </div>
 </nav>
-
-

@@ -11,7 +11,16 @@ class MemberProfileController extends Controller
 {
     public function show()
     {
-        return Inertia::render('Member/Profile');
+        $user = request()->user();
+        
+        $hasSubscription = \App\Models\PushSubscription::query()
+            ->where('user_id', $user->id)
+            ->exists();
+
+        return Inertia::render('Member/Profile', [
+            'vapidPublicKey' => config('push.vapid_public_key'),
+            'hasPushSubscription' => $hasSubscription,
+        ]);
     }
 
     public function update(Request $request)
@@ -24,6 +33,12 @@ class MemberProfileController extends Controller
             'last_name' => ['nullable', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
             'phone' => ['nullable', 'string', 'max:50'],
+            'residence_type' => ['nullable', 'string', 'in:it,foreign'],
+            'residence_street' => ['nullable', 'string', 'max:255'],
+            'residence_house_number' => ['nullable', 'string', 'max:50'],
+            'residence_city' => ['nullable', 'string', 'max:255'],
+            'residence_province_code' => ['nullable', 'string', 'max:2'],
+            'residence_country' => ['nullable', 'string', 'max:255'],
         ]);
 
         $user->update($validated);

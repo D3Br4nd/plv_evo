@@ -20,10 +20,12 @@ export default defineConfig({
         svelte(),
         tailwindcss(),
         VitePWA({
+            outDir: 'public',
             registerType: 'autoUpdate',
             manifest: {
+                lang: 'it',
                 name: 'Pro Loco Venticanese',
-                short_name: 'PLV Evolution',
+                short_name: 'PLV Evo',
                 description: 'L\'evoluzione della tradizione.',
                 // PWA should land on the mobile member home.
                 start_url: '/me',
@@ -32,19 +34,20 @@ export default defineConfig({
                 theme_color: '#000000',
                 icons: [
                     {
-                        src: 'pwa-192x192.png',
+                        src: '/favicon.png',
                         sizes: '192x192',
                         type: 'image/png'
                     },
                     {
-                        src: 'pwa-512x512.png',
+                        src: '/favicon.png',
                         sizes: '512x512',
                         type: 'image/png'
                     }
                 ]
             },
             workbox: {
-                globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+                navigateFallback: null,
+                globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
             },
         })
     ],
@@ -56,12 +59,12 @@ export default defineConfig({
         cors: true,
         ...(hmrHost
             ? {
-                  hmr: {
-                      host: hmrHost,
-                      protocol: hmrProtocol,
-                      clientPort: hmrClientPort,
-                  },
-              }
+                hmr: {
+                    host: hmrHost,
+                    protocol: hmrProtocol,
+                    clientPort: hmrClientPort,
+                },
+            }
             : {}),
         watch: {
             usePolling: true,

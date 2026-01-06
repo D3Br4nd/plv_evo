@@ -3,7 +3,7 @@
     import MemberLayout from "@/layouts/MemberLayout.svelte";
     import { page } from "@inertiajs/svelte";
     import { Button } from "@/lib/components/ui/button";
-    import { QrCode, CalendarDays } from "lucide-svelte";
+    import { QrCode, CalendarDays, Bell } from "lucide-svelte";
     import { cn } from "@/lib/utils/cn";
     import { buttonVariants } from "@/lib/components/ui/button";
     import { Link } from "@inertiajs/svelte";
@@ -39,16 +39,20 @@
             class={cn(
                 "block rounded-xl bg-primary text-primary-foreground",
                 "shadow-sm ring-1 ring-primary/20",
-                "focus:outline-none focus:ring-2 focus:ring-ring"
+                "focus:outline-none focus:ring-2 focus:ring-ring",
             )}
         >
             <div class="flex items-center gap-4 px-4 py-4">
-                <div class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-foreground/10">
+                <div
+                    class="flex h-10 w-10 items-center justify-center rounded-lg bg-primary-foreground/10"
+                >
                     <QrCode class="size-6" />
                 </div>
                 <div class="min-w-0">
                     <div class="font-semibold">Il mio QR (UUID)</div>
-                    <div class="text-xs text-primary-foreground/80">Mostra il QR del tuo UUIDv7</div>
+                    <div class="text-xs text-primary-foreground/80">
+                        Mostra il QR del tuo UUIDv7
+                    </div>
                 </div>
             </div>
         </Link>
@@ -57,20 +61,22 @@
             href="/me/events"
             class={cn(
                 "block rounded-xl border bg-card hover:bg-accent/40 transition-colors",
-                "focus:outline-none focus:ring-2 focus:ring-ring"
+                "focus:outline-none focus:ring-2 focus:ring-ring",
             )}
         >
             <div class="flex items-center gap-4 px-4 py-4">
-                <div class="flex h-10 w-10 items-center justify-center rounded-lg border bg-background">
+                <div
+                    class="flex h-10 w-10 items-center justify-center rounded-lg border bg-background"
+                >
                     <CalendarDays class="size-6" />
                 </div>
                 <div class="min-w-0">
                     <div class="font-semibold">Calendario eventi</div>
-                    <div class="text-xs text-muted-foreground">Vista mensile ottimizzata per mobile</div>
+                    <div class="text-xs text-muted-foreground">
+                        Vista mensile ottimizzata per mobile
+                    </div>
                 </div>
             </div>
         </Link>
     </div>
 </MemberLayout>
-
-

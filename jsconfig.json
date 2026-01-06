@@ -2,12 +2,24 @@
   "compilerOptions": {
     "baseUrl": ".",
     "paths": {
-      "@/*": ["resources/js/*"]
+      "@/*": [
+        "resources/js/*"
+      ]
     },
-    "types": ["vite/client"],
+    "types": [
+      "vite/client"
+    ],
     "checkJs": false
   },
-  "exclude": ["node_modules", "public/build", "vendor", "storage"]
+  "exclude": [
+    "node_modules",
+    "public/build",
+    "vendor",
+    "storage"
+  ],
+  "include": [
+    "resources/js/**/*",
+    "vite.config.js",
+    "tailwind.config.js"
+  ]
 }
-
-
