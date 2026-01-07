@@ -119,6 +119,13 @@ Route::middleware(['auth', 'role:super_admin,admin'])->prefix('admin')->group(fu
         ->name('members.membership.store');
     Route::delete('members/{member}/membership', [AdminMembershipController::class, 'destroy'])
         ->name('members.membership.destroy');
+    
+    // Member avatar (admin)
+    Route::post('members/{member}/avatar', [\App\Http\Controllers\AdminMemberController::class, 'updateMemberAvatar'])
+        ->name('members.avatar.update');
+    Route::delete('members/{member}/avatar', [\App\Http\Controllers\AdminMemberController::class, 'destroyMemberAvatar'])
+        ->name('members.avatar.destroy');
+    
     Route::patch('members/{member}/role', \App\Http\Controllers\AdminMemberRoleController::class.'@update')
         ->name('members.role.update')
         ->middleware('role:super_admin');

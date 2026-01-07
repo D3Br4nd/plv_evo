@@ -34,6 +34,7 @@
 
     let search = $state("");
     let perPage = $state("20");
+    let plvRoleFilter = $state("");
     let isDeleteMemberOpen = $state(false);
     let deleteConfirmationUserId = $state(null);
     let processing = $state(false);
@@ -63,16 +64,39 @@
         timer = setTimeout(() => {
             router.get(
                 "/admin/members",
-                { search: search, per_page: perPage, page: 1 },
+                {
+                    search: search,
+                    per_page: perPage,
+                    plv_role: plvRoleFilter,
+                    page: 1,
+                },
                 { preserveState: true, replace: true },
             );
         }, 300);
     }
 
+    function handlePlvRoleFilter() {
+        router.get(
+            "/admin/members",
+            {
+                search: search,
+                per_page: perPage,
+                plv_role: plvRoleFilter,
+                page: 1,
+            },
+            { preserveState: true, replace: true },
+        );
+    }
+
     function goToPage(pageNumber) {
         router.get(
             "/admin/members",
-            { search: search, per_page: perPage, page: pageNumber },
+            {
+                search: search,
+                per_page: perPage,
+                plv_role: plvRoleFilter,
+                page: pageNumber,
+            },
             { preserveState: true, replace: true },
         );
     }
@@ -81,7 +105,12 @@
         perPage = v;
         router.get(
             "/admin/members",
-            { search: search, per_page: perPage, page: 1 },
+            {
+                search: search,
+                per_page: perPage,
+                plv_role: plvRoleFilter,
+                page: 1,
+            },
             { preserveState: true, replace: true },
         );
     }
@@ -259,18 +288,50 @@
         <div
             class="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
         >
-            <div class="w-full max-w-md">
-                <Label for="member-search" class="text-sm font-medium"
-                    >Cerca</Label
-                >
-                <Input
-                    id="member-search"
-                    type="text"
-                    bind:value={search}
-                    oninput={handleSearch}
-                    placeholder="Nome o email..."
-                    class="mt-2"
-                />
+            <div class="flex gap-3 flex-1 max-w-3xl">
+                <div class="flex-1">
+                    <Label for="member-search" class="text-sm font-medium"
+                        >Cerca</Label
+                    >
+                    <Input
+                        id="member-search"
+                        type="text"
+                        bind:value={search}
+                        oninput={handleSearch}
+                        placeholder="Nome o email..."
+                        class="mt-2"
+                    />
+                </div>
+                <div class="w-56">
+                    <Label for="plv-role-filter" class="text-sm font-medium"
+                        >Ruolo Pro Loco</Label
+                    >
+                    <select
+                        id="plv-role-filter"
+                        bind:value={plvRoleFilter}
+                        onchange={handlePlvRoleFilter}
+                        class="mt-2 h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+                    >
+                        <option value="">Tutti i ruoli</option>
+                        <option value="PRESIDENTE">PRESIDENTE</option>
+                        <option value="VICE PRESIDENTE">VICE PRESIDENTE</option>
+                        <option value="CASSIERE">CASSIERE</option>
+                        <option value="SEGRETARIO">SEGRETARIO</option>
+                        <option value="MAGAZZINIERE">MAGAZZINIERE</option>
+                        <option value="CONSIGLIERE">CONSIGLIERE</option>
+                        <option value="PRESIDENTE DEI REVISORI"
+                            >PRESIDENTE DEI REVISORI</option
+                        >
+                        <option value="REVISORE">REVISORE</option>
+                        <option value="SUPPLENTE REVISORE"
+                            >SUPPLENTE REVISORE</option
+                        >
+                        <option value="PRESIDENTE DEI PROBIVIRI"
+                            >PRESIDENTE DEI PROBIVIRI</option
+                        >
+                        <option value="PROBIVIRO">PROBIVIRO</option>
+                    </select>
+                </div>
             </div>
             <div class="flex gap-2">
                 <DropdownMenu.Root>

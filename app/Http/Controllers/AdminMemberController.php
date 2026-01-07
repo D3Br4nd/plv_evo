@@ -60,6 +60,11 @@ class AdminMemberController extends Controller
             });
         }
 
+        // Filter by PLV role
+        if ($request->filled('plv_role')) {
+            $query->where('plv_role', $request->input('plv_role'));
+        }
+
         $today = now()->toDateString();
         $totalMatching = (clone $query)->count();
         $activeMatching = (clone $query)
@@ -648,5 +653,58 @@ class AdminMemberController extends Controller
             ->back()
             ->with('success', $message)
             ->with('import_errors', $errors);
+    }
+
+    /**
+     * Upload or update member avatar (admin)
+     */
+    public function updateMemberAvatar(Request $request, User $member)
+    {
+        $validated = $request->validate([
+            'avatar' => ['required', 'image', 'max:2048'], // 2MB
+        ]);
+
+        // Delete old avatar (if any)
+        if ($member->avatar_path) {
+            Storage::disk('public')->delete($member->avatar_path);
+        }
+
+        $dir = $member->id.'/avatar';
+        $ext = $validated['avatar']->extension() ?: 'jpg';
+        $path = $validated['avatar']->storePubliclyAs($dir, 'avatar.'.$ext, 'public');
+
+        $member->update(['avatar_path' => $path]);
+
+        ActivityLog::create([
+            'actor_user_id' => $request->user()?->id,
+            'action' => 'updated',
+            'subject_type' => User::class,
+            'subject_id' => $member->id,
+            'summary' => 'Avatar aggiornato da admin',
+        ]);
+
+        return redirect()->back()->with('success', 'Avatar caricato con successo.');
+    }
+
+    /**
+     * Delete member avatar (admin)
+     */
+    public function destroyMemberAvatar(User $member)
+    {
+        if ($member->avatar_path) {
+            Storage::disk('public')->delete($member->avatar_path);
+        }
+
+        $member->update(['avatar_path' => null]);
+
+        ActivityLog::create([
+            'actor_user_id' => request()->user()?->id,
+            'action' => 'updated',
+            'subject_type' => User::class,
+            'subject_id' => $member->id,
+            'summary' => 'Avatar rimosso da admin',
+        ]);
+
+        return redirect()->back()->with('success', 'Avatar eliminato con successo.');
     }
 }

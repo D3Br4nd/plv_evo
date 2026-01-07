@@ -10,6 +10,7 @@
     import * as Card from "@/lib/components/ui/card";
     import { Switch } from "@/lib/components/ui/switch";
     import { Label } from "@/lib/components/ui/label";
+    import { User, Upload, Trash2 } from "lucide-svelte";
 
     import italyPlaces from "@/data/italy_places.json";
 
@@ -23,6 +24,13 @@
     let uuid = $derived(member?.id);
     let qrDataUrl = $state(null);
     let hydrated = $state(false);
+
+    // Avatar upload state
+    let selectedAvatarFile = $state(null);
+    let avatarInputRef = $state(null);
+    let avatarUrl = $derived(
+        member?.avatar_path ? `/storage/${member.avatar_path}` : null,
+    );
 
     function dateOnly(v) {
         if (!v) return "";
@@ -174,6 +182,44 @@
             { preserveScroll: true },
         );
     }
+
+    function handleAvatarChange(e) {
+        const file = e.target.files?.[0];
+        if (file) {
+            selectedAvatarFile = file;
+        }
+    }
+
+    function uploadAvatar() {
+        if (!selectedAvatarFile || !member?.id) return;
+
+        const formData = new FormData();
+        formData.append("avatar", selectedAvatarFile);
+
+        router.post(`/admin/members/${member.id}/avatar`, formData, {
+            preserveScroll: true,
+            onSuccess: () => {
+                selectedAvatarFile = null;
+                if (avatarInputRef) {
+                    avatarInputRef.value = "";
+                }
+            },
+        });
+    }
+
+    function deleteAvatar() {
+        if (!confirm("Eliminare l'avatar del socio?")) return;
+
+        router.delete(`/admin/members/${member.id}/avatar`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                selectedAvatarFile = null;
+                if (avatarInputRef) {
+                    avatarInputRef.value = "";
+                }
+            },
+        });
+    }
 </script>
 
 <AdminLayout title="Scheda socio">
@@ -230,6 +276,98 @@
                                 </div>
                             {/if}
                         </div>
+                    </Card.Content>
+                </Card.Root>
+
+                <!-- Avatar Upload Card -->
+                <Card.Root>
+                    <Card.Header>
+                        <Card.Title>Avatar</Card.Title>
+                        <Card.Description>
+                            Carica un'immagine avatar per il socio.
+                        </Card.Description>
+                    </Card.Header>
+                    <Card.Content class="space-y-4">
+                        <!-- Avatar Preview -->
+                        <div class="flex justify-center">
+                            <div
+                                class="relative size-32 rounded-full bg-muted flex items-center justify-center overflow-hidden border-4 border-background shadow-md"
+                            >
+                                {#if selectedAvatarFile}
+                                    <img
+                                        src={URL.createObjectURL(
+                                            selectedAvatarFile,
+                                        )}
+                                        alt="Preview"
+                                        class="size-full object-cover"
+                                    />
+                                {:else if avatarUrl}
+                                    <img
+                                        src={avatarUrl}
+                                        alt="Avatar"
+                                        class="size-full object-cover"
+                                    />
+                                {:else}
+                                    <User
+                                        class="size-16 text-muted-foreground"
+                                    />
+                                {/if}
+                            </div>
+                        </div>
+
+                        <!-- File Input (hidden) -->
+                        <input
+                            bind:this={avatarInputRef}
+                            type="file"
+                            accept="image/*"
+                            onchange={handleAvatarChange}
+                            class="hidden"
+                        />
+
+                        <!-- Action Buttons -->
+                        <div class="flex flex-col gap-2">
+                            {#if selectedAvatarFile}
+                                <Button onclick={uploadAvatar} class="w-full">
+                                    <Upload class="h-4 w-4 mr-2" />
+                                    Salva avatar
+                                </Button>
+                                <Button
+                                    variant="outline"
+                                    onclick={() => {
+                                        selectedAvatarFile = null;
+                                        if (avatarInputRef) {
+                                            avatarInputRef.value = "";
+                                        }
+                                    }}
+                                    class="w-full"
+                                >
+                                    Annulla
+                                </Button>
+                            {:else}
+                                <Button
+                                    variant="outline"
+                                    onclick={() => avatarInputRef?.click()}
+                                    class="w-full"
+                                >
+                                    <Upload class="h-4 w-4 mr-2" />
+                                    Carica avatar
+                                </Button>
+                                {#if avatarUrl}
+                                    <Button
+                                        variant="destructive"
+                                        onclick={deleteAvatar}
+                                        class="w-full"
+                                    >
+                                        <Trash2 class="h-4 w-4 mr-2" />
+                                        Elimina avatar
+                                    </Button>
+                                {/if}
+                            {/if}
+                        </div>
+
+                        <p class="text-xs text-muted-foreground text-center">
+                            Dimensione massima: 2MB
+                        </p>
                     </Card.Content>
                 </Card.Root>
 
