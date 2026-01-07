@@ -21,10 +21,9 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => \App\Http\Middleware\EnsureRole::class,
         ]);
     })
+    ->withProviders([
+        \App\Providers\AppServiceProvider::class,
+    ])
     ->withExceptions(function (Exceptions $exceptions) {
         //
     })->create();
-
-$app->register(\App\Providers\AppServiceProvider::class);
-
-return $app;

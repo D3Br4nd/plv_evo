@@ -150,27 +150,18 @@
 
     function save() {
         if (!member?.id) return;
-
-        // Clear previous role permission error
-        rolePermissionError = null;
-
-        // Check if trying to change role without permission
-        const canManageRoles = $page.props.auth?.can?.manageRoles;
-        const roleChanged = form.role !== member.role;
-
-        if (roleChanged && !canManageRoles) {
-            rolePermissionError =
-                "Solo il Super Admin può modificare i ruoli applicativi";
-            // Scroll to top to show error
-            window.scrollTo({ top: 0, behavior: "smooth" });
-            return;
-        }
-
         // Safety net: avoid sending empty strings for required fields if user clicks too fast.
         if (!form.name) form.name = member?.name ?? "";
         if (!form.email) form.email = member?.email ?? "";
 
-        router.patch(`/admin/members/${member.id}`, form, {
+        // Prepare payload - exclude role if user cannot manage roles
+        const canManageRoles = $page.props.auth?.can?.manageRoles;
+        const payload = { ...form };
+        if (!canManageRoles) {
+            delete payload.role;
+        }
+
+        router.patch(`/admin/members/${member.id}`, payload, {
             preserveScroll: true,
             preserveState: true,
         });
@@ -212,30 +203,6 @@
         {/if}
         {#if flash?.error}
             <div class="text-sm text-destructive">{flash.error}</div>
-        {/if}
-        {#if rolePermissionError}
-            <div
-                class="rounded-md bg-destructive/10 dark:bg-destructive/20 p-3 text-sm flex items-center gap-2 text-destructive"
-            >
-                <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    width="16"
-                    height="16"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                    stroke-linejoin="round"
-                >
-                    <path
-                        d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"
-                    />
-                    <path d="M12 9v4" />
-                    <path d="M12 17h.01" />
-                </svg>
-                {rolePermissionError}
-            </div>
         {/if}
 
         <div class="grid gap-6 lg:grid-cols-3 items-start">
