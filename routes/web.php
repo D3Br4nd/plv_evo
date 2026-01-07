@@ -103,6 +103,12 @@ Route::middleware(['auth', 'role:super_admin,admin'])->prefix('admin')->group(fu
     Route::delete('/profile/avatar', [AdminProfileController::class, 'destroyAvatar'])->name('admin.profile.avatar.destroy');
     Route::put('/profile/password', [AdminProfileController::class, 'updatePassword'])->name('admin.profile.password');
 
+    // CSV Export/Import (must come before resource route)
+    Route::get('members/export', [\App\Http\Controllers\AdminMemberController::class, 'exportCsv'])
+        ->name('members.export');
+    Route::post('members/import', [\App\Http\Controllers\AdminMemberController::class, 'importCsv'])
+        ->name('members.import');
+
     Route::resource('members', \App\Http\Controllers\AdminMemberController::class);
     Route::post('members/{member}/invite', [AdminMemberInvitationController::class, 'store'])
         ->name('members.invite.store');

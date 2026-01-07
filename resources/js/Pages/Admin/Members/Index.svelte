@@ -12,6 +12,9 @@
         UserCheck,
         UserX,
         Mail,
+        Download,
+        Upload,
+        MoreVertical,
     } from "lucide-svelte";
     import { Button } from "@/lib/components/ui/button";
     import { Input } from "@/lib/components/ui/input";
@@ -20,18 +23,23 @@
     import * as Table from "@/lib/components/ui/table";
     import * as Dialog from "@/lib/components/ui/dialog";
     import * as Select from "@/lib/components/ui/select";
+    import * as DropdownMenu from "@/lib/components/ui/dropdown-menu";
     import { Label } from "@/lib/components/ui/label";
 
     let { users, stats, chartData } = $props();
     let flash = $derived($page.props.flash);
     let canManageRoles = $derived($page.props.auth?.can?.manageRoles);
     let inviteUrl = $derived($page.props?.flash?.invite_url);
+    let importErrors = $derived($page.props?.flash?.import_errors);
 
     let search = $state("");
     let perPage = $state("20");
     let isDeleteMemberOpen = $state(false);
     let deleteConfirmationUserId = $state(null);
     let processing = $state(false);
+    let isImportDialogOpen = $state(false);
+    let importFile = $state(null);
+    let fileInputElement = $state(null);
 
     function isActiveByExpiry(user) {
         if (!user?.plv_expires_at) return false;
@@ -125,6 +133,44 @@
                 return "Socio";
             default:
                 return role || "-";
+        }
+    }
+
+    function handleExport() {
+        window.location.href = "/admin/members/export";
+    }
+
+    function openImportDialog() {
+        isImportDialogOpen = true;
+    }
+
+    function closeImportDialog() {
+        isImportDialogOpen = false;
+        importFile = null;
+        if (fileInputElement) {
+            fileInputElement.value = "";
+        }
+    }
+
+    function handleImport() {
+        if (!importFile) return;
+
+        const formData = new FormData();
+        formData.append("file", importFile);
+
+        processing = true;
+        router.post("/admin/members/import", formData, {
+            onFinish: () => {
+                processing = false;
+                closeImportDialog();
+            },
+        });
+    }
+
+    function handleFileChange(e) {
+        const files = e.target.files;
+        if (files && files.length > 0) {
+            importFile = files[0];
         }
     }
 </script>
@@ -226,10 +272,51 @@
                     class="mt-2"
                 />
             </div>
-            <Button onclick={() => router.get("/admin/members/create")}
-                >Nuovo socio</Button
-            >
+            <div class="flex gap-2">
+                <DropdownMenu.Root>
+                    <DropdownMenu.Trigger>
+                        <Button variant="outline">
+                            <MoreVertical class="h-4 w-4 mr-2" />
+                            Azioni
+                        </Button>
+                    </DropdownMenu.Trigger>
+                    <DropdownMenu.Content align="end">
+                        <DropdownMenu.Item onclick={handleExport}>
+                            <Download class="h-4 w-4 mr-2" />
+                            Esporta CSV
+                        </DropdownMenu.Item>
+                        <DropdownMenu.Item onclick={openImportDialog}>
+                            <Upload class="h-4 w-4 mr-2" />
+                            Importa CSV
+                        </DropdownMenu.Item>
+                    </DropdownMenu.Content>
+                </DropdownMenu.Root>
+                <Button onclick={() => router.get("/admin/members/create")}
+                    >Nuovo socio</Button
+                >
+            </div>
         </div>
+
+        {#if importErrors && importErrors.length > 0}
+            <Card.Root class="border-amber-200 dark:border-amber-800">
+                <Card.Header>
+                    <Card.Title class="text-amber-800 dark:text-amber-200"
+                        >Errori Import CSV</Card.Title
+                    >
+                    <Card.Description
+                        >Alcune righe non sono state importate a causa di errori
+                        di validazione.</Card.Description
+                    >
+                </Card.Header>
+                <Card.Content>
+                    <ul class="list-disc list-inside space-y-1 text-sm">
+                        {#each importErrors as error}
+                            <li class="text-muted-foreground">{error}</li>
+                        {/each}
+                    </ul>
+                </Card.Content>
+            </Card.Root>
+        {/if}
 
         <!-- Table -->
         <!-- NOTE: Card.Root has default padding (py-6) and gap (gap-6). For tables we want a flush container. -->
@@ -470,6 +557,68 @@
                     disabled={processing}
                 >
                     {processing ? "Eliminazione..." : "Elimina"}
+                </Button>
+            </Dialog.Footer>
+        </Dialog.Content>
+    </Dialog.Root>
+
+    <!-- Import Dialog -->
+    <Dialog.Root bind:open={isImportDialogOpen}>
+        <Dialog.Content class="max-w-md">
+            <Dialog.Header>
+                <Dialog.Title>Importa Soci da CSV</Dialog.Title>
+                <Dialog.Description>
+                    Carica un file CSV con i dati dei soci. Il file deve
+                    contenere almeno le colonne "Nome" ed "Email".
+                </Dialog.Description>
+            </Dialog.Header>
+
+            <div class="space-y-4 py-4">
+                <div class="space-y-2">
+                    <Label for="csv-file">File CSV</Label>
+                    <input
+                        id="csv-file"
+                        type="file"
+                        accept=".csv,text/csv"
+                        bind:this={fileInputElement}
+                        onchange={handleFileChange}
+                        class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+                    />
+                    {#if importFile}
+                        <p class="text-xs text-muted-foreground">
+                            File selezionato: {importFile.name} ({Math.round(
+                                importFile.size / 1024,
+                            )} KB)
+                        </p>
+                    {/if}
+                </div>
+
+                <div class="rounded-md bg-muted p-3 text-sm space-y-1">
+                    <p class="font-medium">Formato CSV:</p>
+                    <ul class="list-disc list-inside text-xs space-y-0.5">
+                        <li>Colonne obbligatorie: Nome, Email</li>
+                        <li>
+                            I soci esistenti (stessa email) verranno aggiornati
+                        </li>
+                        <li>I nuovi soci riceveranno un invito via email</li>
+                        <li>Encoding: UTF-8</li>
+                    </ul>
+                </div>
+            </div>
+
+            <Dialog.Footer>
+                <Button
+                    variant="outline"
+                    onclick={closeImportDialog}
+                    disabled={processing}
+                >
+                    Annulla
+                </Button>
+                <Button
+                    onclick={handleImport}
+                    disabled={!importFile || processing}
+                >
+                    {processing ? "Importazione..." : "Importa"}
                 </Button>
             </Dialog.Footer>
         </Dialog.Content>
