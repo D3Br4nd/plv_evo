@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\PushSubscription;
 use Illuminate\Http\Request;
 
 class MemberPushSubscriptionController extends Controller
@@ -11,38 +10,45 @@ class MemberPushSubscriptionController extends Controller
     {
         $user = $request->user();
 
-        $validated = $request->validate([
-            'endpoint' => ['required', 'string'],
-            'keys' => ['required', 'array'],
-            'keys.p256dh' => ['required', 'string'],
-            'keys.auth' => ['required', 'string'],
-            'contentEncoding' => ['nullable', 'string'],
-        ]);
+        \Log::info('Push subscription attempt:', ['user' => $user->id, 'data' => $request->all()]);
 
-        PushSubscription::updateOrCreate(
-            [
-                'user_id' => $user->id,
-                'endpoint' => $validated['endpoint'],
-            ],
-            [
-                'public_key' => $validated['keys']['p256dh'],
-                'auth_token' => $validated['keys']['auth'],
-                'content_encoding' => $validated['contentEncoding'] ?? 'aesgcm',
-                'user_agent' => (string) $request->userAgent(),
-            ],
-        );
+        try {
+            $validated = $request->validate([
+                'endpoint' => ['required', 'string'],
+                'keys' => ['required', 'array'],
+                'keys.p256dh' => ['required', 'string'],
+                'keys.auth' => ['required', 'string'],
+                'contentEncoding' => ['nullable', 'string'],
+            ]);
 
-        return response()->json(['ok' => true]);
+            $user->updatePushSubscription(
+                $validated['endpoint'],
+                $validated['keys']['p256dh'],
+                $validated['keys']['auth'],
+                $validated['contentEncoding'] ?? 'aesgcm'
+            );
+
+            return response()->json(['ok' => true]);
+        } catch (\Exception $e) {
+            \Log::error('Push subscription failed:', ['error' => $e->getMessage()]);
+            return response()->json(['error' => $e->getMessage()], 500);
+        }
     }
 
     public function destroy(Request $request)
     {
         $user = $request->user();
 
-        PushSubscription::query()
-            ->where('user_id', $user->id)
-            ->where('endpoint', $request->input('endpoint'))
-            ->delete();
+        // The package expects the endpoint to be provided to delete it
+        $endpoint = $request->input('endpoint');
+        
+        if ($endpoint) {
+            $user->deletePushSubscription($endpoint);
+        } else {
+            // Fallback: delete all if endpoint not provided?
+            // Usually we want to delete a specific one.
+            $user->pushSubscriptions()->delete();
+        }
 
         return response()->json(['ok' => true]);
     }

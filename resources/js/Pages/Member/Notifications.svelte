@@ -4,7 +4,7 @@
     import * as Card from "@/lib/components/ui/card";
     import { Button } from "@/lib/components/ui/button";
     import { Badge } from "@/lib/components/ui/badge";
-    import { router } from "@inertiajs/svelte";
+    import { router, Link } from "@inertiajs/svelte";
     import { toast } from "svelte-sonner";
 
     let { notifications, vapidPublicKey, hasPushSubscription } = $props();
@@ -117,7 +117,11 @@
 
     function bodyOf(n) {
         const data = n?.data || {};
-        return data?.body || "";
+        return data?.body || data?.message || "";
+    }
+
+    function urlOf(n) {
+        return n?.data?.url || null;
     }
 </script>
 
@@ -137,16 +141,34 @@
                     {#each notifications.data as n (n.id)}
                         <div class="rounded-lg border p-3">
                             <div class="flex items-start justify-between gap-3">
-                                <div class="min-w-0">
-                                    <div class="font-medium truncate">
-                                        {titleOf(n)}
-                                    </div>
-                                    {#if bodyOf(n)}
-                                        <div
-                                            class="mt-1 text-xs text-muted-foreground"
+                                <div class="min-w-0 flex-1">
+                                    {#if urlOf(n)}
+                                        <Link
+                                            href={urlOf(n)}
+                                            class="block hover:opacity-80 transition-opacity"
                                         >
-                                            {bodyOf(n)}
+                                            <div class="font-medium truncate">
+                                                {titleOf(n)}
+                                            </div>
+                                            {#if bodyOf(n)}
+                                                <div
+                                                    class="mt-1 text-xs text-muted-foreground line-clamp-2"
+                                                >
+                                                    {bodyOf(n)}
+                                                </div>
+                                            {/if}
+                                        </Link>
+                                    {:else}
+                                        <div class="font-medium truncate">
+                                            {titleOf(n)}
                                         </div>
+                                        {#if bodyOf(n)}
+                                            <div
+                                                class="mt-1 text-xs text-muted-foreground"
+                                            >
+                                                {bodyOf(n)}
+                                            </div>
+                                        {/if}
                                     {/if}
                                     <div
                                         class="mt-2 text-[11px] text-muted-foreground"

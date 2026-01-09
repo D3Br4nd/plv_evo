@@ -144,15 +144,13 @@
         return outputArray;
     }
 
-    let pushEnabled = $state(false); // Default to false, check on mount
+    let pushEnabled = $state(untrack(() => hasPushSubscription));
     let pushProcessing = $state(false);
 
     $effect(() => {
         if (typeof window !== "undefined" && "serviceWorker" in navigator) {
             navigator.serviceWorker.ready.then(async (reg) => {
                 const sub = await reg.pushManager.getSubscription();
-                if (import.meta.env.DEV)
-                    console.log("Subscription found:", sub);
                 pushEnabled = !!sub;
             });
         }
@@ -169,9 +167,6 @@
             return;
         }
 
-        // Optimistic Update
-        const previousState = pushEnabled;
-        pushEnabled = true;
         pushProcessing = true;
 
         try {
@@ -186,6 +181,9 @@
                 applicationServerKey: urlBase64ToUint8Array(vapidPublicKey),
             });
 
+            const subData = sub.toJSON();
+            console.log("Sending subscription to server:", subData);
+
             const res = await fetch("/me/push-subscriptions", {
                 method: "POST",
                 headers: {
@@ -195,15 +193,15 @@
                         .querySelector('meta[name="csrf-token"]')
                         ?.getAttribute("content"),
                 },
-                body: JSON.stringify(sub),
+                body: JSON.stringify(subData),
             });
 
             if (!res.ok) throw new Error("Server error");
 
+            pushEnabled = true;
             toast.success("Notifiche abilitate!");
         } catch (e) {
             console.error(e);
-            pushEnabled = previousState; // Revert on failure
             toast.error("Impossibile abilitare le notifiche.");
         } finally {
             pushProcessing = false;
@@ -212,10 +210,6 @@
 
     async function disableNotifications() {
         if (pushProcessing) return;
-
-        // Optimistic Update
-        const previousState = pushEnabled;
-        pushEnabled = false;
         pushProcessing = true;
 
         try {
@@ -226,7 +220,7 @@
                     await sub.unsubscribe();
 
                     // Send endpoint to server to delete only this one
-                    await fetch("/me/push-subscriptions", {
+                    const res = await fetch("/me/push-subscriptions", {
                         method: "DELETE",
                         headers: {
                             "Content-Type": "application/json",
@@ -237,15 +231,15 @@
                         },
                         body: JSON.stringify({ endpoint: sub.endpoint }),
                     });
+
+                    if (!res.ok) throw new Error("Server error");
                 }
             }
 
-            if (!res.ok) throw new Error("Server error");
-
+            pushEnabled = false;
             toast.success("Notifiche disabilitate.");
         } catch (e) {
             console.error(e);
-            pushEnabled = previousState; // Revert on failure
             toast.error("Errore durante la disabilitazione.");
         } finally {
             pushProcessing = false;

@@ -58,7 +58,7 @@ return new class extends Migration
         // Sessions
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
-            $table->foreignId('user_id')->nullable()->index();
+            $table->uuid('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();
             $table->longText('payload');
@@ -178,6 +178,15 @@ return new class extends Migration
             $table->timestamps();
         });
 
+        // Committee Post Read Status (Pivot)
+        Schema::create('committee_post_read', function (Blueprint $table) {
+            $table->foreignUuid('post_id')->constrained('committee_posts')->cascadeOnDelete();
+            $table->foreignUuid('user_id')->constrained('users')->cascadeOnDelete();
+            $table->timestamp('read_at')->useCurrent();
+
+            $table->primary(['post_id', 'user_id']);
+        });
+
         // Content Pages (Public/Private)
         Schema::create('content_pages', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -198,24 +207,21 @@ return new class extends Migration
         Schema::create('notifications', function (Blueprint $table) {
             $table->uuid('id')->primary();
             $table->string('type');
-            $table->morphs('notifiable');
+            $table->uuidMorphs('notifiable');
             $table->text('data');
             $table->timestamp('read_at')->nullable();
             $table->timestamps();
         });
 
-        // Push Subscriptions
+        // Push Subscriptions (WebPush)
         Schema::create('push_subscriptions', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->foreignUuid('user_id')->constrained()->cascadeOnDelete();
-            $table->text('endpoint');
-            $table->text('public_key');
-            $table->text('auth_token');
-            $table->string('content_encoding')->default('aesgcm');
-            $table->string('user_agent')->nullable();
+            $table->uuidMorphs('subscribable');
+            $table->string('endpoint', 500)->unique();
+            $table->string('public_key')->nullable();
+            $table->string('auth_token')->nullable();
+            $table->string('content_encoding')->nullable();
             $table->timestamps();
-
-            $table->unique(['user_id', 'endpoint']);
         });
     }
 
@@ -225,6 +231,7 @@ return new class extends Migration
     public function down(): void
     {
         Schema::dropIfExists('push_subscriptions');
+        Schema::dropIfExists('committee_post_read');
         Schema::dropIfExists('notifications');
         Schema::dropIfExists('content_pages');
         Schema::dropIfExists('committee_posts');

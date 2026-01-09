@@ -21,10 +21,14 @@ RUN mv /app/public/build/manifest.webmanifest /app/public/manifest.webmanifest |
 
 FROM dunglas/frankenphp:php8.4 AS app
 
+# Copy composer from the vendor stage
+COPY --from=vendor /usr/bin/composer /usr/bin/composer
+
 RUN install-php-extensions \
     pdo_pgsql \
     redis \
     bcmath \
+    gmp \
     intl \
     zip \
     pcntl

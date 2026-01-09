@@ -3,26 +3,23 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
+use NotificationChannels\WebPush\PushSubscription as BasePushSubscription;
 
-class PushSubscription extends Model
+class PushSubscription extends BasePushSubscription
 {
-    use HasFactory, HasUuids;
+    use HasUuids;
 
-    protected $fillable = [
-        'user_id',
-        'endpoint',
-        'public_key',
-        'auth_token',
-        'content_encoding',
-        'user_agent',
-    ];
+    /**
+     * Indicates if the IDs are auto-incrementing.
+     *
+     * @var bool
+     */
+    public $incrementing = false;
 
-    public function user()
-    {
-        return $this->belongsTo(User::class);
-    }
+    /**
+     * The data type of the auto-incrementing ID.
+     *
+     * @var string
+     */
+    protected $keyType = 'string';
 }
-
-

@@ -12,7 +12,8 @@ class MemberOnboardingController extends Controller
         $user = request()->user();
 
         $hasSubscription = PushSubscription::query()
-            ->where('user_id', $user->id)
+            ->where('subscribable_type', $user->getMorphClass())
+            ->where('subscribable_id', $user->id)
             ->exists();
 
         return Inertia::render('Member/Onboarding', [

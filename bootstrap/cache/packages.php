@@ -6,6 +6,20 @@
       0 => 'Inertia\\ServiceProvider',
     ),
   ),
+  'laravel-notification-channels/webpush' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'NotificationChannels\\WebPush\\WebPushServiceProvider',
+    ),
+  ),
+  'laravel/pail' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Laravel\\Pail\\PailServiceProvider',
+    ),
+  ),
   'laravel/reverb' => 
   array (
     'aliases' => 
@@ -16,6 +30,13 @@
     array (
       0 => 'Laravel\\Reverb\\ApplicationManagerServiceProvider',
       1 => 'Laravel\\Reverb\\ReverbServiceProvider',
+    ),
+  ),
+  'laravel/sail' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'Laravel\\Sail\\SailServiceProvider',
     ),
   ),
   'laravel/tinker' => 
@@ -30,6 +51,13 @@
     'providers' => 
     array (
       0 => 'Carbon\\Laravel\\ServiceProvider',
+    ),
+  ),
+  'nunomaduro/collision' => 
+  array (
+    'providers' => 
+    array (
+      0 => 'NunoMaduro\\Collision\\Adapters\\Laravel\\CollisionServiceProvider',
     ),
   ),
   'nunomaduro/termwind' => 

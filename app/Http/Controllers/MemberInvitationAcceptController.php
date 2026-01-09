@@ -52,6 +52,7 @@ class MemberInvitationAcceptController extends Controller
         $user->forceFill([
             'password' => Hash::make($validated['password']),
             'must_set_password' => false,
+            'membership_status' => 'active', // Auto-activate: invitation implies paid membership
         ])->save();
 
         // Auto-activate membership for the current year

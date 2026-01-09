@@ -13,8 +13,7 @@ class MemberProfileController extends Controller
     {
         $user = request()->user();
         
-        $hasSubscription = \App\Models\PushSubscription::query()
-            ->where('user_id', $user->id)
+        $hasSubscription = $user->pushSubscriptions()
             ->exists();
 
         return Inertia::render('Member/Profile', [

@@ -22,6 +22,9 @@ export default defineConfig({
         VitePWA({
             outDir: 'public',
             registerType: 'autoUpdate',
+            strategies: 'injectManifest',
+            srcDir: 'resources/js',
+            filename: 'sw.js',
             manifest: {
                 lang: 'it',
                 name: 'Pro Loco Venticanese',
@@ -45,8 +48,7 @@ export default defineConfig({
                     }
                 ]
             },
-            workbox: {
-                navigateFallback: null,
+            injectManifest: {
                 globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
             },
         })

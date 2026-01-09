@@ -12,8 +12,7 @@ class MemberNotificationsController extends Controller
     {
         $user = $request->user();
 
-        $hasSubscription = PushSubscription::query()
-            ->where('user_id', $user->id)
+        $hasSubscription = $user->pushSubscriptions()
             ->exists();
 
         return Inertia::render('Member/Notifications', [

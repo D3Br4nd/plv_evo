@@ -160,12 +160,29 @@ class AdminCommitteeController extends Controller
 
         $committee = Committee::findOrFail($committeeId);
 
-        CommitteePost::create([
+        $post = CommitteePost::create([
             'committee_id' => $committee->id,
             'author_id' => auth()->id(),
             'title' => $validated['title'],
             'content' => $validated['content'],
         ]);
+
+        // Load relations needed for the notification
+        $post->load(['committee', 'author']);
+
+        // Notify all committee members except the author
+        $members = $committee->members()->where('users.id', '!=', auth()->id())->get();
+        
+        \Log::info('Sending committee post notification', [
+            'post_id' => $post->id,
+            'committee_id' => $committee->id,
+            'committee_name' => $post->committee->name,
+            'author_name' => $post->author->name,
+            'members_count' => $members->count(),
+            'member_ids' => $members->pluck('id')->toArray(),
+        ]);
+        
+        \Illuminate\Support\Facades\Notification::send($members, new \App\Notifications\NewCommitteePost($post));
 
         return back()->with('flash', [
             'type' => 'success',

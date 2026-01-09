@@ -72,6 +72,13 @@ Route::middleware('auth')->delete('/me/push-subscriptions', [MemberPushSubscript
 Route::middleware('auth')->get('/me/notifications', [MemberNotificationsController::class, 'index'])->name('member.notifications');
 Route::middleware('auth')->delete('/me/notifications/{notificationId}', [MemberNotificationsController::class, 'destroy'])->name('member.notifications.destroy');
 
+// Committees (PWA)
+Route::middleware('auth')->prefix('me/committees')->group(function () {
+    Route::get('/', [\App\Http\Controllers\MemberCommitteeController::class, 'index'])->name('member.committees.index');
+    Route::get('/{committee}', [\App\Http\Controllers\MemberCommitteeController::class, 'show'])->name('member.committees.show');
+    Route::post('/posts/{post}/read', [\App\Http\Controllers\MemberCommitteeController::class, 'markAsRead'])->name('member.committees.posts.mark-as-read');
+});
+
 // One-time invitation link (public)
 Route::get('/invite/{token}', [MemberInvitationAcceptController::class, 'show'])->name('invite.accept');
 Route::post('/invite/{token}', [MemberInvitationAcceptController::class, 'store'])->name('invite.store');

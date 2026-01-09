@@ -33,11 +33,17 @@ class CommitteePost extends Model
         return $this->belongsTo(Committee::class);
     }
 
-    /**
-     * Get the author of the post.
-     */
     public function author()
     {
         return $this->belongsTo(User::class, 'author_id');
+    }
+
+    /**
+     * Get the users who have read this post.
+     */
+    public function readers()
+    {
+        return $this->belongsToMany(User::class, 'committee_post_read', 'post_id', 'user_id')
+            ->withPivot('read_at');
     }
 }

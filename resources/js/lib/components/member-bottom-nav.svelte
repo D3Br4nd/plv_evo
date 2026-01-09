@@ -16,6 +16,7 @@
 
     const items = [
         { href: "/me", label: "Home", icon: Home },
+        { href: "/me/committees", label: "Comitati", icon: User },
         { href: "/me/events", label: "Eventi", icon: CalendarDays },
         { href: "/me/notifications", label: "Notifiche", icon: Bell },
         { href: "/me/profile", label: "Profilo", icon: User },
@@ -26,7 +27,7 @@
     class="fixed bottom-0 left-0 right-0 z-40 border-t bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80"
     style="padding-bottom: env(safe-area-inset-bottom);"
 >
-    <div class="mx-auto grid max-w-xl grid-cols-4 gap-1 px-2 py-2">
+    <div class="mx-auto grid max-w-xl grid-cols-5 gap-1 px-2 py-2">
         {#each items as item (item.href)}
             <Link
                 href={item.href}
