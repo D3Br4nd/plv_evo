@@ -31,12 +31,20 @@
 </script>
 
 <AdminLayout title="Comitati">
-
-
     <div class="space-y-6">
-        <p class="text-sm text-muted-foreground">
-            Gestisci i comitati della Pro Loco e i loro membri.
-        </p>
+        <div
+            class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between"
+        >
+            <p class="text-sm text-muted-foreground">
+                Gestisci i comitati della Pro Loco e i loro membri.
+            </p>
+            {#if committees.length > 0}
+                <Button onclick={() => (createDialogOpen = true)}>
+                    <PlusIcon class="mr-2 size-4" />
+                    Crea Comitato
+                </Button>
+            {/if}
+        </div>
         {#if committees.length === 0}
             <Card.Root>
                 <Card.Content
@@ -54,12 +62,6 @@
                 </Card.Content>
             </Card.Root>
         {:else}
-            <div class="flex justify-end">
-                <Button onclick={() => (createDialogOpen = true)}>
-                    <PlusIcon class="mr-2 size-4" />
-                    Crea Comitato
-                </Button>
-            </div>
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {#each committees as committee}
                     <Card.Root
@@ -70,9 +72,24 @@
                             class="block"
                         >
                             <Card.Header>
+                                <div
+                                    class="mb-4 flex h-12 w-12 items-center justify-center overflow-hidden rounded-lg bg-muted"
+                                >
+                                    {#if committee.image_url}
+                                        <img
+                                            src={committee.image_url}
+                                            alt={committee.name}
+                                            class="h-full w-full object-cover"
+                                        />
+                                    {:else}
+                                        <UsersIcon
+                                            class="size-6 text-muted-foreground"
+                                        />
+                                    {/if}
+                                </div>
                                 <Card.Title>{committee.name}</Card.Title>
                                 {#if committee.description}
-                                    <Card.Description class="line-clamp-2">
+                                    <Card.Description class="mt-2 line-clamp-2">
                                         {committee.description}
                                     </Card.Description>
                                 {/if}

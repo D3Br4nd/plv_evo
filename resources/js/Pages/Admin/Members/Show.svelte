@@ -11,6 +11,8 @@
     import { Switch } from "@/lib/components/ui/switch";
     import { Label } from "@/lib/components/ui/label";
     import { User, Upload, Trash2 } from "lucide-svelte";
+    import { Badge } from "@/lib/components/ui/badge";
+    import * as Dialog from "@/lib/components/ui/dialog";
 
     import italyPlaces from "@/data/italy_places.json";
 
@@ -18,6 +20,10 @@
     let flash = $derived($page.props.flash);
     let serverErrors = $derived($page.props.errors || {});
     let errorsLocal = $state({});
+
+    // Confirmation Dialogs
+    let confirmAvatarDeletionOpen = $state(false);
+    let confirmInviteCancellationOpen = $state(false);
 
     let inviteUrl = $derived($page.props?.flash?.invite_url);
 
@@ -208,11 +214,14 @@
     }
 
     function deleteAvatar() {
-        if (!confirm("Eliminare l'avatar del socio?")) return;
+        confirmAvatarDeletionOpen = true;
+    }
 
+    function confirmDeleteAvatar() {
         router.delete(`/admin/members/${member.id}/avatar`, {
             preserveScroll: true,
             onSuccess: () => {
+                confirmAvatarDeletionOpen = false;
                 selectedAvatarFile = null;
                 if (avatarInputRef) {
                     avatarInputRef.value = "";
@@ -435,6 +444,54 @@
                         </Card.Content>
                     </Card.Root>
                 {/if}
+
+                <Card.Root>
+                    <Card.Header>
+                        <Card.Title>Comitati</Card.Title>
+                        <Card.Description>
+                            Comitati di cui il socio fa parte.
+                        </Card.Description>
+                    </Card.Header>
+                    <Card.Content>
+                        {#if !member.committees || member.committees.length === 0}
+                            <p class="text-sm text-muted-foreground italic">
+                                Il socio non appartiene a nessun comitato.
+                            </p>
+                        {:else}
+                            <div class="space-y-3">
+                                {#each member.committees as committee}
+                                    <div
+                                        class="flex items-center justify-between rounded-lg border p-3"
+                                    >
+                                        <div>
+                                            <div class="text-sm font-medium">
+                                                {committee.name}
+                                            </div>
+                                            {#if committee.pivot?.role}
+                                                <div
+                                                    class="text-xs text-muted-foreground"
+                                                >
+                                                    {committee.pivot.role}
+                                                </div>
+                                            {/if}
+                                        </div>
+                                        <Badge
+                                            variant={committee.status ===
+                                            "active"
+                                                ? "outline"
+                                                : "secondary"}
+                                            class="h-5 text-[10px]"
+                                        >
+                                            {committee.status === "active"
+                                                ? "Attivo"
+                                                : "Inattivo"}
+                                        </Badge>
+                                    </div>
+                                {/each}
+                            </div>
+                        {/if}
+                    </Card.Content>
+                </Card.Root>
             </div>
 
             <div class="space-y-6 lg:col-span-2">
@@ -513,16 +570,7 @@
                                     variant="destructive"
                                     class="w-full"
                                     onclick={() => {
-                                        if (
-                                            confirm(
-                                                "Annullare l'invito esistente? Il link non funzionerà più.",
-                                            )
-                                        ) {
-                                            router.delete(
-                                                `/admin/members/${member.id}/invite`,
-                                                { preserveScroll: true },
-                                            );
-                                        }
+                                        confirmInviteCancellationOpen = true;
                                     }}
                                 >
                                     Annulla invito
@@ -964,4 +1012,59 @@
             </div>
         </div>
     </div>
+    <Dialog.Root bind:open={confirmAvatarDeletionOpen}>
+        <Dialog.Content>
+            <Dialog.Header>
+                <Dialog.Title>Elimina Avatar</Dialog.Title>
+                <Dialog.Description>
+                    Sei sicuro di voler eliminare l'avatar del socio? Questa
+                    azione non può essere annullata.
+                </Dialog.Description>
+            </Dialog.Header>
+            <Dialog.Footer>
+                <Button
+                    variant="outline"
+                    onclick={() => (confirmAvatarDeletionOpen = false)}
+                >
+                    Annulla
+                </Button>
+                <Button variant="destructive" onclick={confirmDeleteAvatar}>
+                    Elimina
+                </Button>
+            </Dialog.Footer>
+        </Dialog.Content>
+    </Dialog.Root>
+
+    <Dialog.Root bind:open={confirmInviteCancellationOpen}>
+        <Dialog.Content>
+            <Dialog.Header>
+                <Dialog.Title>Annulla Invito</Dialog.Title>
+                <Dialog.Description>
+                    Annullare l'invito esistente? Il socio non potrà più
+                    accedere tramite questo link.
+                </Dialog.Description>
+            </Dialog.Header>
+            <Dialog.Footer>
+                <Button
+                    variant="outline"
+                    onclick={() => (confirmInviteCancellationOpen = false)}
+                >
+                    Annulla
+                </Button>
+                <Button
+                    variant="destructive"
+                    onclick={() => {
+                        router.delete(`/admin/members/${member.id}/invite`, {
+                            preserveScroll: true,
+                            onSuccess: () => {
+                                confirmInviteCancellationOpen = false;
+                            },
+                        });
+                    }}
+                >
+                    Conferma
+                </Button>
+            </Dialog.Footer>
+        </Dialog.Content>
+    </Dialog.Root>
 </AdminLayout>

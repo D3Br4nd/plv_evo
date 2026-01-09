@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Storage;
 
 class Committee extends Model
 {
@@ -14,7 +15,17 @@ class Committee extends Model
         'name',
         'description',
         'status',
+        'image_path',
         'created_by_user_id',
+    ];
+
+    /**
+     * Computed attributes included when serializing the model (e.g. shared to Inertia).
+     *
+     * @var list<string>
+     */
+    protected $appends = [
+        'image_url',
     ];
 
     protected function casts(): array
@@ -49,5 +60,14 @@ class Committee extends Model
     public function creator()
     {
         return $this->belongsTo(User::class, 'created_by_user_id');
+    }
+
+    public function getImageUrlAttribute(): ?string
+    {
+        if (! $this->image_path) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->image_path);
     }
 }

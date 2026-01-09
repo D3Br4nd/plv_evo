@@ -82,6 +82,10 @@
     });
     let processing = $state(false);
 
+    // Confirmation Dialog
+    let confirmDeletionOpen = $state(false);
+    let projectToDeleteId = $state(null);
+
     function createProject() {
         processing = true;
         router.post("/admin/projects", newProjectForm, {
@@ -101,6 +105,18 @@
         });
     }
 
+    function confirmDeleteProject() {
+        if (!projectToDeleteId) return;
+        processing = true;
+        router.delete(`/admin/projects/${projectToDeleteId}`, {
+            onSuccess: () => {
+                confirmDeletionOpen = false;
+                projectToDeleteId = null;
+            },
+            onFinish: () => (processing = false),
+        });
+    }
+
     // Sync local state when props change (e.g. after backend save)
     $effect(() => {
         localProjects = projects;
@@ -109,13 +125,18 @@
 
 <AdminLayout title="Progetti">
     {#snippet headerActions()}
-        <Button onclick={() => (isNewProjectOpen = true)} aria-label="Nuovo Task">
+        <Button
+            onclick={() => (isNewProjectOpen = true)}
+            aria-label="Nuovo Task"
+        >
             Nuovo task
         </Button>
     {/snippet}
 
     <div class="h-full flex flex-col space-y-6">
-        <p class="text-sm text-muted-foreground">Organizza i task per gli eventi.</p>
+        <p class="text-sm text-muted-foreground">
+            Organizza i task per gli eventi.
+        </p>
 
         <!-- Kanban Board -->
         <div class="flex-1 overflow-x-auto">
@@ -128,8 +149,12 @@
                         role="region"
                         aria-label={column.title}
                     >
-                        <Card.Header class="flex-row items-center justify-between space-y-0">
-                            <Card.Title class="text-base">{column.title}</Card.Title>
+                        <Card.Header
+                            class="flex-row items-center justify-between space-y-0"
+                        >
+                            <Card.Title class="text-base"
+                                >{column.title}</Card.Title
+                            >
                             <Badge variant="secondary">
                                 {getProjectsByStatus(column.id).length}
                             </Badge>
@@ -148,11 +173,17 @@
                                         class="flex justify-between items-start mb-2"
                                     >
                                         {#if project.priority === "high"}
-                                            <Badge variant="destructive">Alta</Badge>
+                                            <Badge variant="destructive"
+                                                >Alta</Badge
+                                            >
                                         {:else if project.priority === "medium"}
-                                            <Badge variant="secondary">Media</Badge>
+                                            <Badge variant="secondary"
+                                                >Media</Badge
+                                            >
                                         {:else}
-                                            <Badge variant="outline">Bassa</Badge>
+                                            <Badge variant="outline"
+                                                >Bassa</Badge
+                                            >
                                         {/if}
                                         {#if project.assignee}
                                             <div
@@ -165,9 +196,7 @@
                                             </div>
                                         {/if}
                                     </div>
-                                    <h4
-                                        class="text-sm font-medium mb-2"
-                                    >
+                                    <h4 class="text-sm font-medium mb-2">
                                         {project.title}
                                     </h4>
                                     <div
@@ -179,10 +208,8 @@
                                             class="text-destructive hover:text-destructive"
                                             aria-label="Elimina Task"
                                             onclick={() => {
-                                                if (confirm("Eliminare?"))
-                                                    router.delete(
-                                                        `/admin/projects/${project.id}`,
-                                                    );
+                                                projectToDeleteId = project.id;
+                                                confirmDeletionOpen = true;
                                             }}
                                         >
                                             Elimina
@@ -201,7 +228,8 @@
         <Dialog.Content class="max-w-md">
             <Dialog.Header>
                 <Dialog.Title>Nuovo task</Dialog.Title>
-                <Dialog.Description>Crea una nuova attività.</Dialog.Description>
+                <Dialog.Description>Crea una nuova attività.</Dialog.Description
+                >
             </Dialog.Header>
 
             <div class="mt-4 space-y-3">
@@ -224,6 +252,33 @@
                 </Dialog.Close>
                 <Button onclick={createProject} disabled={processing}>
                     {processing ? "Salvataggio..." : "Crea"}
+                </Button>
+            </Dialog.Footer>
+        </Dialog.Content>
+    </Dialog.Root>
+
+    <Dialog.Root bind:open={confirmDeletionOpen}>
+        <Dialog.Content>
+            <Dialog.Header>
+                <Dialog.Title>Elimina Task</Dialog.Title>
+                <Dialog.Description>
+                    Sei sicuro di voler eliminare questo task? Questa azione non
+                    può essere annullata.
+                </Dialog.Description>
+            </Dialog.Header>
+            <Dialog.Footer>
+                <Button
+                    variant="outline"
+                    onclick={() => (confirmDeletionOpen = false)}
+                >
+                    Annulla
+                </Button>
+                <Button
+                    variant="destructive"
+                    onclick={confirmDeleteProject}
+                    disabled={processing}
+                >
+                    {processing ? "Eliminazione..." : "Elimina"}
                 </Button>
             </Dialog.Footer>
         </Dialog.Content>

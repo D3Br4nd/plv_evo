@@ -123,6 +123,7 @@ class AdminMemberController extends Controller
         $member->load([
             'memberships' => fn($q) => $q->where('year', $year),
             'invitations' => fn($q) => $q->whereNull('used_at')->where('expires_at', '>', now())->latest(),
+            'committees' => fn($q) => $q->orderBy('name'),
         ]);
 
         return Inertia::render('Admin/Members/Show', [

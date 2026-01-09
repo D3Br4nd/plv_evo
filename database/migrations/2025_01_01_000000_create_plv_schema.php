@@ -112,6 +112,7 @@ return new class extends Migration
             $table->string('name');
             $table->text('description')->nullable();
             $table->string('status')->default('active');
+            $table->string('image_path')->nullable();
             $table->foreignUuid('created_by_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });

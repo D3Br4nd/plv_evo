@@ -5,7 +5,9 @@ namespace App\Http\Controllers;
 use App\Models\Committee;
 use App\Models\CommitteePost;
 use App\Models\User;
+use App\Models\ActivityLog;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
 
 class AdminCommitteeController extends Controller
@@ -185,6 +187,69 @@ class AdminCommitteeController extends Controller
         return back()->with('flash', [
             'type' => 'success',
             'message' => 'Post eliminato dalla bacheca.',
+        ]);
+    }
+
+    /**
+     * Upload or update committee image.
+     */
+    public function updateCommitteeImage(Request $request, string $id)
+    {
+        $validated = $request->validate([
+            'image' => ['required', 'image', 'max:2048'], // 2MB
+        ]);
+
+        $committee = Committee::findOrFail($id);
+
+        // Delete old image (if any)
+        if ($committee->image_path) {
+            Storage::disk('public')->delete($committee->image_path);
+        }
+
+        $dir = 'committees/'.$committee->id;
+        $ext = $validated['image']->extension() ?: 'jpg';
+        $path = $validated['image']->storePubliclyAs($dir, 'image.'.$ext, 'public');
+
+        $committee->update(['image_path' => $path]);
+
+        ActivityLog::create([
+            'actor_user_id' => $request->user()?->id,
+            'action' => 'updated',
+            'subject_type' => Committee::class,
+            'subject_id' => $committee->id,
+            'summary' => 'Immagine comitato aggiornata',
+        ]);
+
+        return back()->with('flash', [
+            'type' => 'success',
+            'message' => 'Immagine caricata con successo.',
+        ]);
+    }
+
+    /**
+     * Delete committee image.
+     */
+    public function destroyCommitteeImage(string $id)
+    {
+        $committee = Committee::findOrFail($id);
+
+        if ($committee->image_path) {
+            Storage::disk('public')->delete($committee->image_path);
+        }
+
+        $committee->update(['image_path' => null]);
+
+        ActivityLog::create([
+            'actor_user_id' => request()->user()?->id,
+            'action' => 'updated',
+            'subject_type' => Committee::class,
+            'subject_id' => $committee->id,
+            'summary' => 'Immagine comitato rimossa',
+        ]);
+
+        return back()->with('flash', [
+            'type' => 'success',
+            'message' => 'Immagine eliminata con successo.',
         ]);
     }
 }

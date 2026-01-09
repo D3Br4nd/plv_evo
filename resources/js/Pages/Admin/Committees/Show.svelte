@@ -12,10 +12,13 @@
     import { Label } from "@/lib/components/ui/label";
     import { Textarea } from "@/lib/components/ui/textarea";
     import { Badge } from "@/lib/components/ui/badge";
+    import { Switch } from "@/lib/components/ui/switch";
     import { router } from "@inertiajs/svelte";
     import PlusIcon from "@tabler/icons-svelte/icons/plus";
     import TrashIcon from "@tabler/icons-svelte/icons/trash";
     import UserIcon from "@tabler/icons-svelte/icons/user";
+    import UploadIcon from "@tabler/icons-svelte/icons/upload";
+    import Trash2Icon from "@tabler/icons-svelte/icons/trash";
     import CheckIcon from "@tabler/icons-svelte/icons/check";
     import SelectorIcon from "@tabler/icons-svelte/icons/selector";
     import { formatDistanceToNow } from "date-fns";
@@ -34,6 +37,20 @@
         title: "",
         content: "",
     });
+
+    // Image Upload State
+    let selectedImageFile = $state(null);
+    let imageInputRef = $state(null);
+
+    // Confirmation Dialogs
+    let confirmRemovalOpen = $state(false);
+    let memberToRemoveId = $state(null);
+    let memberToRemoveName = $state("");
+
+    let confirmPostDeletionOpen = $state(false);
+    let postToDeleteId = $state(null);
+
+    let confirmImageDeletionOpen = $state(false);
 
     function handleAddMember() {
         if (!selectedMemberId) return;
@@ -54,14 +71,24 @@
         );
     }
 
-    function handleRemoveMember(userId) {
-        if (
-            confirm("Sei sicuro di voler rimuovere questo membro dal comitato?")
-        ) {
-            router.delete(
-                `/admin/committees/${committee.id}/members/${userId}`,
-            );
-        }
+    function handleRemoveMember(userId, userName) {
+        memberToRemoveId = userId;
+        memberToRemoveName = userName;
+        confirmRemovalOpen = true;
+    }
+
+    function confirmRemoveMember() {
+        if (!memberToRemoveId) return;
+        router.delete(
+            `/admin/committees/${committee.id}/members/${memberToRemoveId}`,
+            {
+                onSuccess: () => {
+                    confirmRemovalOpen = false;
+                    memberToRemoveId = null;
+                    memberToRemoveName = "";
+                },
+            },
+        );
     }
 
     function handleCreatePost() {
@@ -73,10 +100,63 @@
         });
     }
 
+    function handleStatusToggle() {
+        const newStatus = committee.status === "active" ? "inactive" : "active";
+        router.patch(
+            `/admin/committees/${committee.id}`,
+            {
+                name: committee.name,
+                status: newStatus,
+            },
+            {
+                preserveScroll: true,
+            },
+        );
+    }
+
+    function handleImageUpload(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const formData = new FormData();
+        formData.append("image", file);
+
+        router.post(`/admin/committees/${committee.id}/image`, formData, {
+            preserveScroll: true,
+            onSuccess: () => {
+                selectedImageFile = null;
+                if (imageInputRef) {
+                    imageInputRef.value = "";
+                }
+            },
+        });
+    }
+
+    function confirmDeleteImage() {
+        router.delete(`/admin/committees/${committee.id}/image`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                confirmImageDeletionOpen = false;
+            },
+        });
+    }
+
     function handleDeletePost(postId) {
-        if (confirm("Sei sicuro di voler eliminare questo post?")) {
-            router.delete(`/admin/committees/${committee.id}/posts/${postId}`);
-        }
+        postToDeleteId = postId;
+        confirmPostDeletionOpen = true;
+    }
+
+    function confirmDeletePost() {
+        if (!postToDeleteId) return;
+        router.delete(
+            `/admin/committees/${committee.id}/posts/${postToDeleteId}`,
+            {
+                onSuccess: () => {
+                    confirmPostDeletionOpen = false;
+                    postToDeleteId = null;
+                },
+            },
+        );
     }
 </script>
 
@@ -85,23 +165,102 @@
         <!-- Committee Header -->
         <div>
             <div class="flex items-center justify-between">
-                <div>
-                    <h1 class="text-3xl font-bold tracking-tight">
-                        {committee.name}
-                    </h1>
-                    {#if committee.description}
-                        <p class="mt-2 text-muted-foreground">
-                            {committee.description}
-                        </p>
-                    {/if}
+                <div class="flex items-center gap-6">
+                    <!-- Committee Image -->
+                    <div class="relative group">
+                        <div
+                            class="size-24 rounded-2xl border-2 border-dashed border-muted-foreground/25 bg-muted flex items-center justify-center overflow-hidden transition-all group-hover:border-primary/50"
+                        >
+                            {#if committee.image_url}
+                                <img
+                                    src={committee.image_url}
+                                    alt={committee.name}
+                                    class="h-full w-full object-cover"
+                                />
+                            {:else}
+                                <div class="text-center p-2">
+                                    <UserIcon
+                                        class="size-8 mx-auto text-muted-foreground/50 mb-1"
+                                    />
+                                    <span
+                                        class="text-[10px] text-muted-foreground uppercase font-semibold tracking-wider"
+                                        >No Logo</span
+                                    >
+                                </div>
+                            {/if}
+                        </div>
+
+                        <!-- Upload/Delete Overlay -->
+                        <div
+                            class="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
+                        >
+                            <Button
+                                variant="secondary"
+                                size="icon"
+                                class="size-8 rounded-full"
+                                onclick={() => imageInputRef?.click()}
+                                title="Carica logo"
+                            >
+                                <UploadIcon class="size-4" />
+                            </Button>
+                            {#if committee.image_url}
+                                <Button
+                                    variant="destructive"
+                                    size="icon"
+                                    class="size-8 rounded-full"
+                                    onclick={() =>
+                                        (confirmImageDeletionOpen = true)}
+                                    title="Rimuovi logo"
+                                >
+                                    <Trash2Icon class="size-4" />
+                                </Button>
+                            {/if}
+                        </div>
+
+                        <input
+                            type="file"
+                            accept="image/*"
+                            class="hidden"
+                            bind:this={imageInputRef}
+                            onchange={handleImageUpload}
+                        />
+                    </div>
+
+                    <div>
+                        <h1 class="text-3xl font-bold tracking-tight">
+                            {committee.name}
+                        </h1>
+                        {#if committee.description}
+                            <p class="mt-2 text-muted-foreground">
+                                {committee.description}
+                            </p>
+                        {/if}
+                    </div>
                 </div>
-                <Badge
-                    variant={committee.status === "active"
-                        ? "default"
-                        : "secondary"}
-                >
-                    {committee.status === "active" ? "Attivo" : "Inattivo"}
-                </Badge>
+                <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-2">
+                        <Label
+                            for="committee-status"
+                            class="text-xs font-medium uppercase tracking-wider text-muted-foreground"
+                        >
+                            {committee.status === "active"
+                                ? "Attivo"
+                                : "Inattivo"}
+                        </Label>
+                        <Switch
+                            id="committee-status"
+                            checked={committee.status === "active"}
+                            onCheckedChange={handleStatusToggle}
+                        />
+                    </div>
+                    <Badge
+                        variant={committee.status === "active"
+                            ? "default"
+                            : "secondary"}
+                    >
+                        {committee.status === "active" ? "Attivo" : "Inattivo"}
+                    </Badge>
+                </div>
             </div>
         </div>
 
@@ -169,7 +328,10 @@
                                             variant="ghost"
                                             size="icon"
                                             onclick={() =>
-                                                handleRemoveMember(member.id)}
+                                                handleRemoveMember(
+                                                    member.id,
+                                                    member.name,
+                                                )}
                                         >
                                             <TrashIcon
                                                 class="size-4 text-destructive"
@@ -428,6 +590,79 @@
                     <Button type="submit">Pubblica</Button>
                 </Dialog.Footer>
             </form>
+        </Dialog.Content>
+    </Dialog.Root>
+
+    <!-- Confirm Member Removal Dialog -->
+    <Dialog.Root bind:open={confirmRemovalOpen}>
+        <Dialog.Content>
+            <Dialog.Header>
+                <Dialog.Title>Rimuovi Membro</Dialog.Title>
+                <Dialog.Description>
+                    Sei sicuro di voler rimuovere <strong
+                        >{memberToRemoveName}</strong
+                    > dal comitato? Questa azione non può essere annullata.
+                </Dialog.Description>
+            </Dialog.Header>
+            <Dialog.Footer>
+                <Button
+                    variant="outline"
+                    onclick={() => (confirmRemovalOpen = false)}
+                >
+                    Annulla
+                </Button>
+                <Button variant="destructive" onclick={confirmRemoveMember}>
+                    Rimuovi
+                </Button>
+            </Dialog.Footer>
+        </Dialog.Content>
+    </Dialog.Root>
+
+    <!-- Confirm Post Deletion Dialog -->
+    <Dialog.Root bind:open={confirmPostDeletionOpen}>
+        <Dialog.Content>
+            <Dialog.Header>
+                <Dialog.Title>Elimina Post</Dialog.Title>
+                <Dialog.Description>
+                    Sei sicuro di voler eliminare questo post dalla bacheca?
+                    Questa azione non può essere annullata.
+                </Dialog.Description>
+            </Dialog.Header>
+            <Dialog.Footer>
+                <Button
+                    variant="outline"
+                    onclick={() => (confirmPostDeletionOpen = false)}
+                >
+                    Annulla
+                </Button>
+                <Button variant="destructive" onclick={confirmDeletePost}>
+                    Elimina
+                </Button>
+            </Dialog.Footer>
+        </Dialog.Content>
+    </Dialog.Root>
+
+    <!-- Confirm Image Deletion Dialog -->
+    <Dialog.Root bind:open={confirmImageDeletionOpen}>
+        <Dialog.Content>
+            <Dialog.Header>
+                <Dialog.Title>Rimuovi Logo Comitato</Dialog.Title>
+                <Dialog.Description>
+                    Sei sicuro di voler rimuovere il logo del comitato? Questa
+                    azione non può essere annullata.
+                </Dialog.Description>
+            </Dialog.Header>
+            <Dialog.Footer>
+                <Button
+                    variant="outline"
+                    onclick={() => (confirmImageDeletionOpen = false)}
+                >
+                    Annulla
+                </Button>
+                <Button variant="destructive" onclick={confirmDeleteImage}>
+                    Rimuovi
+                </Button>
+            </Dialog.Footer>
         </Dialog.Content>
     </Dialog.Root>
 </AdminLayout>
