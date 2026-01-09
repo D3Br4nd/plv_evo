@@ -31,12 +31,7 @@
 </script>
 
 <AdminLayout title="Comitati">
-    {#snippet headerActions()}
-        <Button onclick={() => (createDialogOpen = true)}>
-            <PlusIcon class="mr-2 size-4" />
-            Crea Comitato
-        </Button>
-    {/snippet}
+
 
     <div class="space-y-6">
         <p class="text-sm text-muted-foreground">
@@ -59,6 +54,12 @@
                 </Card.Content>
             </Card.Root>
         {:else}
+            <div class="flex justify-end">
+                <Button onclick={() => (createDialogOpen = true)}>
+                    <PlusIcon class="mr-2 size-4" />
+                    Crea Comitato
+                </Button>
+            </div>
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                 {#each committees as committee}
                     <Card.Root

@@ -247,6 +247,7 @@
                 <div class="flex items-center gap-2">
                     <span class="text-sm text-muted-foreground">Tipo:</span>
                     <Select.Root
+                        type="single"
                         value={filterType || "all"}
                         onValueChange={(v) => setFilter(v === "all" ? null : v)}
                     >
