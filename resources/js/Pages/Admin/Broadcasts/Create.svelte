@@ -2,6 +2,7 @@
     import AdminLayout from "@/layouts/AdminLayout.svelte";
     import { Button } from "@/lib/components/ui/button";
     import * as Card from "@/lib/components/ui/card";
+    import * as Dialog from "@/lib/components/ui/dialog";
     import { Input } from "@/lib/components/ui/input";
     import { Label } from "@/lib/components/ui/label";
     import { router } from "@inertiajs/svelte";
@@ -31,6 +32,10 @@
     let imageInputRef = $state(null);
     let attachmentInputRef = $state(null);
     let submitting = $state(false);
+
+    // Link dialog state
+    let linkDialogOpen = $state(false);
+    let linkUrl = $state("");
 
     onMount(() => {
         editor = new Editor({
@@ -91,23 +96,31 @@
         if (attachmentInputRef) attachmentInputRef.value = "";
     }
 
-    function setLink() {
-        const previousUrl = editor?.getAttributes("link").href;
-        const url = window.prompt("URL del link:", previousUrl);
+    function openLinkDialog() {
+        const previousUrl = editor?.getAttributes("link").href || "";
+        linkUrl = previousUrl;
+        linkDialogOpen = true;
+    }
 
-        if (url === null) return;
-
-        if (url === "") {
+    function applyLink() {
+        if (linkUrl === "") {
             editor?.chain().focus().extendMarkRange("link").unsetLink().run();
-            return;
+        } else {
+            editor
+                ?.chain()
+                .focus()
+                .extendMarkRange("link")
+                .setLink({ href: linkUrl })
+                .run();
         }
+        linkDialogOpen = false;
+        linkUrl = "";
+    }
 
-        editor
-            ?.chain()
-            .focus()
-            .extendMarkRange("link")
-            .setLink({ href: url })
-            .run();
+    function removeLink() {
+        editor?.chain().focus().extendMarkRange("link").unsetLink().run();
+        linkDialogOpen = false;
+        linkUrl = "";
     }
 
     function handleSubmit() {
@@ -263,7 +276,7 @@
                                     : "ghost"}
                                 size="icon"
                                 class="size-8"
-                                onclick={setLink}
+                                onclick={openLinkDialog}
                                 disabled={!editor}
                             >
                                 <LinkIcon class="size-4" />
@@ -374,6 +387,43 @@
             </Card.Content>
         </Card.Root>
     </div>
+
+    <!-- Link Dialog -->
+    <Dialog.Root bind:open={linkDialogOpen}>
+        <Dialog.Content class="sm:max-w-md">
+            <Dialog.Header>
+                <Dialog.Title>Inserisci Link</Dialog.Title>
+                <Dialog.Description>
+                    Inserisci l'URL del link da applicare al testo selezionato.
+                </Dialog.Description>
+            </Dialog.Header>
+            <div class="space-y-4 py-4">
+                <div class="space-y-2">
+                    <Label for="linkUrl">URL</Label>
+                    <Input
+                        id="linkUrl"
+                        type="url"
+                        bind:value={linkUrl}
+                        placeholder="https://esempio.com"
+                    />
+                </div>
+            </div>
+            <Dialog.Footer class="flex gap-2">
+                {#if editor?.isActive("link")}
+                    <Button variant="destructive" onclick={removeLink}>
+                        Rimuovi Link
+                    </Button>
+                {/if}
+                <Button
+                    variant="outline"
+                    onclick={() => (linkDialogOpen = false)}
+                >
+                    Annulla
+                </Button>
+                <Button onclick={applyLink}>Applica</Button>
+            </Dialog.Footer>
+        </Dialog.Content>
+    </Dialog.Root>
 </AdminLayout>
 
 <style>
