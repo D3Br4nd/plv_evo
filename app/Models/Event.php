@@ -15,6 +15,8 @@ class Event extends Model
         'start_date',
         'end_date',
         'type',
+        'description',
+        'committee_id',
         'metadata',
     ];
 
@@ -30,5 +32,10 @@ class Event extends Model
     public function checkins()
     {
         return $this->hasMany(EventCheckin::class);
+    }
+
+    public function committee()
+    {
+        return $this->belongsTo(Committee::class);
     }
 }

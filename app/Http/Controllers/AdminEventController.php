@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Event;
 use App\Models\ActivityLog;
+use App\Models\Committee;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Carbon\Carbon;
@@ -23,17 +24,21 @@ class AdminEventController extends Controller
         $start = $date->copy()->startOfMonth()->startOfWeek(Carbon::MONDAY);
         $end = $date->copy()->endOfMonth()->endOfWeek(Carbon::SUNDAY);
 
-        $query = Event::whereBetween('start_date', [$start, $end])
-            ->orWhereBetween('end_date', [$start, $end]);
+        $query = Event::where(function ($q) use ($start, $end) {
+            $q->whereBetween('start_date', [$start, $end])
+                ->orWhereBetween('end_date', [$start, $end]);
+        });
 
         if ($filterType) {
             $query->where('type', $filterType);
         }
 
         $events = $query->orderBy('start_date')->get();
+        $committees = Committee::select('id', 'name')->orderBy('name')->get();
 
         return Inertia::render('Admin/Events/Calendar', [
             'events' => $events,
+            'committees' => $committees,
             'currentDate' => $date->format('Y-m-d'),
             'filterType' => $filterType,
         ]);
@@ -49,6 +54,8 @@ class AdminEventController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'type' => 'required|string|in:meeting,event,fair,other',
+            'description' => 'nullable|string',
+            'committee_id' => 'nullable|uuid|exists:committees,id',
             'metadata' => 'nullable|array',
         ]);
 
@@ -75,6 +82,8 @@ class AdminEventController extends Controller
             'start_date' => 'required|date',
             'end_date' => 'required|date|after_or_equal:start_date',
             'type' => 'required|string|in:meeting,event,fair,other',
+            'description' => 'nullable|string',
+            'committee_id' => 'nullable|uuid|exists:committees,id',
             'metadata' => 'nullable|array',
         ]);
 

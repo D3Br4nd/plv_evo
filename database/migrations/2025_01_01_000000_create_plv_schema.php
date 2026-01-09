@@ -106,6 +106,16 @@ return new class extends Migration
             $table->index(['user_id', 'expires_at']);
         });
 
+        // Committees (Moved before Events)
+        Schema::create('committees', function (Blueprint $table) {
+            $table->uuid('id')->primary();
+            $table->string('name');
+            $table->text('description')->nullable();
+            $table->string('status')->default('active');
+            $table->foreignUuid('created_by_user_id')->nullable()->constrained('users')->nullOnDelete();
+            $table->timestamps();
+        });
+
         // Events
         Schema::create('events', function (Blueprint $table) {
             $table->uuid('id')->primary();
@@ -113,6 +123,8 @@ return new class extends Migration
             $table->timestamp('start_date');
             $table->timestamp('end_date');
             $table->string('type'); // meeting, event, etc
+            $table->text('description')->nullable();
+            $table->foreignUuid('committee_id')->nullable()->constrained('committees')->nullOnDelete();
             $table->json('metadata')->nullable();
             $table->timestamps();
         });
@@ -139,16 +151,6 @@ return new class extends Migration
             $table->string('status')->default('todo'); 
             $table->string('priority')->default('medium');
             $table->uuid('assignee_id')->nullable();
-            $table->timestamps();
-        });
-
-        // Committees
-        Schema::create('committees', function (Blueprint $table) {
-            $table->uuid('id')->primary();
-            $table->string('name');
-            $table->text('description')->nullable();
-            $table->string('status')->default('active');
-            $table->foreignUuid('created_by_user_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();
         });
 
