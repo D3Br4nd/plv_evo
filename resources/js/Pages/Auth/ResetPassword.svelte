@@ -1,30 +1,35 @@
 <script>
     import { useForm } from "@inertiajs/svelte";
-    import { Mail, Lock, LogIn } from "lucide-svelte";
+    import { Lock } from "lucide-svelte";
     import PublicLayout from "@/layouts/PublicLayout.svelte";
     import { Button } from "@/lib/components/ui/button";
     import { Input } from "@/lib/components/ui/input";
     import * as Card from "@/lib/components/ui/card";
 
-    // Form state
+    let { token, email } = $props();
+
+    // Form state - initialize with current prop values
     const form = useForm({
-        email: "",
+        token: token,
+        email: email || "",
         password: "",
-        remember: false,
+        password_confirmation: "",
     });
 
     function handleSubmit(e) {
         e.preventDefault();
-        $form.post("/login");
+        $form.post("/reset-password");
     }
 </script>
 
-<PublicLayout title="Accedi">
+<PublicLayout title="Reimposta Password">
     <div class="mx-auto w-full max-w-md">
         <Card.Root>
             <Card.Header class="text-center">
-                <Card.Title>Accedi</Card.Title>
-                <Card.Description>Accedi alla piattaforma</Card.Description>
+                <Card.Title>Reimposta Password</Card.Title>
+                <Card.Description>
+                    Inserisci la tua nuova password
+                </Card.Description>
             </Card.Header>
             <Card.Content>
                 <form onsubmit={handleSubmit} class="space-y-4">
@@ -32,19 +37,14 @@
                         <label for="email" class="text-sm font-medium"
                             >Email</label
                         >
-                        <div class="relative">
-                            <Mail
-                                class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-                            />
-                            <Input
-                                id="email"
-                                type="email"
-                                bind:value={$form.email}
-                                required
-                                placeholder="admin@prolocoventicanese.it"
-                                class="pl-9"
-                            />
-                        </div>
+                        <Input
+                            id="email"
+                            type="email"
+                            bind:value={$form.email}
+                            required
+                            readonly
+                            class="bg-muted"
+                        />
                         {#if $form.errors.email}
                             <p class="text-sm text-destructive">
                                 {$form.errors.email}
@@ -54,7 +54,7 @@
 
                     <div class="space-y-1.5">
                         <label for="password" class="text-sm font-medium"
-                            >Password</label
+                            >Nuova Password</label
                         >
                         <div class="relative">
                             <Lock
@@ -76,24 +76,26 @@
                         {/if}
                     </div>
 
-                    <div class="flex items-center justify-between">
-                        <div class="flex items-center gap-2">
-                            <input
-                                id="remember"
-                                type="checkbox"
-                                bind:checked={$form.remember}
-                                class="h-4 w-4 rounded border-input text-primary focus:ring-ring"
-                            />
-                            <label for="remember" class="text-sm"
-                                >Ricordami</label
-                            >
-                        </div>
-                        <a
-                            href="/forgot-password"
-                            class="text-sm text-primary hover:underline"
+                    <div class="space-y-1.5">
+                        <label
+                            for="password_confirmation"
+                            class="text-sm font-medium"
                         >
-                            Password dimenticata?
-                        </a>
+                            Conferma Password
+                        </label>
+                        <div class="relative">
+                            <Lock
+                                class="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+                            />
+                            <Input
+                                id="password_confirmation"
+                                type="password"
+                                bind:value={$form.password_confirmation}
+                                required
+                                placeholder="••••••••"
+                                class="pl-9"
+                            />
+                        </div>
                     </div>
 
                     <Button
@@ -102,18 +104,17 @@
                         class="w-full"
                     >
                         {#if $form.processing}
-                            Accesso in corso...
+                            Reimpostazione in corso...
                         {:else}
-                            <LogIn class="size-4" /> Accedi
+                            Reimposta Password
                         {/if}
                     </Button>
                 </form>
             </Card.Content>
             <Card.Footer class="justify-center">
-                <p class="text-sm text-muted-foreground">
-                    Non hai un account? Le registrazioni vengono gestite dalla
-                    segreteria.
-                </p>
+                <a href="/login" class="text-sm text-primary hover:underline">
+                    Torna al login
+                </a>
             </Card.Footer>
         </Card.Root>
     </div>

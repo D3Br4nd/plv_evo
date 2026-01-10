@@ -58,8 +58,15 @@ class AdminDashboardController extends Controller
                 'committeeStats' => $committeeStats,
                 
                 'notificationStats' => [
-                    'sent' => DB::table('notifications')->whereYear('created_at', $year)->count(),
-                    'read' => DB::table('notifications')->whereYear('created_at', $year)->whereNotNull('read_at')->count(),
+                    'sent' => DB::table('notifications')
+                        ->whereYear('created_at', $year)
+                        ->whereRaw("(data::jsonb)->>'type' = ?", ['broadcast'])
+                        ->count(),
+                    'read' => DB::table('notifications')
+                        ->whereYear('created_at', $year)
+                        ->whereRaw("(data::jsonb)->>'type' = ?", ['broadcast'])
+                        ->whereNotNull('read_at')
+                        ->count(),
                 ],
             ],
             'activity' => ActivityLog::query()
@@ -72,6 +79,23 @@ class AdminDashboardController extends Controller
                 ->latest()
                 ->get(),
         ]);
+    }
+    
+    /**
+     * Clear activity logs older than a specified date.
+     * Only accessible by super admins.
+     */
+    public function clearActivityLogs(Request $request)
+    {
+        $validated = $request->validate([
+            'before_date' => 'required|date',
+        ]);
+        
+        $deletedCount = ActivityLog::where('created_at', '<', $validated['before_date'])->delete();
+        
+        return redirect()
+            ->back()
+            ->with('success', "Eliminate {$deletedCount} attività precedenti al " . \Carbon\Carbon::parse($validated['before_date'])->format('d/m/Y'));
     }
 }
 

@@ -1,14 +1,44 @@
 <script>
     import AdminLayout from "../../layouts/AdminLayout.svelte";
     import { Button } from "@/lib/components/ui/button";
-    import { router } from "@inertiajs/svelte";
+    import { Input } from "@/lib/components/ui/input";
+    import { Label } from "@/lib/components/ui/label";
+    import { router, page } from "@inertiajs/svelte";
     import * as Card from "@/lib/components/ui/card";
     import * as Table from "@/lib/components/ui/table";
+    import * as Dialog from "@/lib/components/ui/dialog";
+    import { Trash2 } from "lucide-svelte";
+    
     let { stats, activity, recentActivity } = $props();
+    
+    let isSuperAdmin = $derived($page.props.auth?.user?.role === 'super_admin');
+    let isCleanupDialogOpen = $state(false);
+    let cleanupDate = $state('');
+    let processing = $state(false);
 
     function go(url) {
         if (!url) return;
         router.get(url, {}, { preserveScroll: true });
+    }
+    
+    function openCleanupDialog() {
+        // Set default date to 30 days ago
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        cleanupDate = thirtyDaysAgo.toISOString().split('T')[0];
+        isCleanupDialogOpen = true;
+    }
+    
+    function clearActivityLogs() {
+        if (!cleanupDate) return;
+        processing = true;
+        router.delete('/admin/activity-logs/clear', {
+            data: { before_date: cleanupDate },
+            onFinish: () => {
+                processing = false;
+                isCleanupDialogOpen = false;
+            },
+        });
     }
 </script>
 
@@ -255,10 +285,25 @@
 
         <Card.Root>
             <Card.Header class="pb-3">
-                <Card.Title>Attività recenti</Card.Title>
-                <Card.Description>
-                    Operazioni su soci, eventi, comitati e contenuti.
-                </Card.Description>
+                <div class="flex items-center justify-between">
+                    <div>
+                        <Card.Title>Attività recenti</Card.Title>
+                        <Card.Description>
+                            Operazioni su soci, eventi, comitati e contenuti.
+                        </Card.Description>
+                    </div>
+                    {#if isSuperAdmin}
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            class="gap-2"
+                            onclick={openCleanupDialog}
+                        >
+                            <Trash2 class="size-4" />
+                            <span class="hidden sm:inline">Pulisci vecchie attività</span>
+                        </Button>
+                    {/if}
+                </div>
             </Card.Header>
             <Card.Content class="p-0">
                 <div class="overflow-x-auto">
@@ -364,4 +409,49 @@
             {/if}
         </Card.Root>
     </div>
+    
+    <!-- Cleanup Activity Logs Dialog -->
+    <Dialog.Root bind:open={isCleanupDialogOpen}>
+        <Dialog.Content class="max-w-md">
+            <Dialog.Header>
+                <Dialog.Title>Pulisci Attività Vecchie</Dialog.Title>
+                <Dialog.Description>
+                    Elimina tutte le attività registrate prima della data selezionata. Questa azione non può essere annullata.
+                </Dialog.Description>
+            </Dialog.Header>
+            
+            <div class="space-y-4 py-4">
+                <div class="space-y-2">
+                    <Label for="cleanup-date">Elimina attività precedenti al:</Label>
+                    <Input 
+                        id="cleanup-date"
+                        type="date" 
+                        bind:value={cleanupDate}
+                        max={new Date().toISOString().split('T')[0]}
+                        class="w-full"
+                    />
+                    <p class="text-xs text-muted-foreground">
+                        Verranno eliminate tutte le attività create prima di questa data.
+                    </p>
+                </div>
+            </div>
+            
+            <Dialog.Footer>
+                <Button 
+                    variant="outline" 
+                    onclick={() => isCleanupDialogOpen = false}
+                    disabled={processing}
+                >
+                    Annulla
+                </Button>
+                <Button 
+                    variant="destructive"
+                    onclick={clearActivityLogs}
+                    disabled={processing || !cleanupDate}
+                >
+                    {processing ? 'Eliminazione...' : 'Elimina Attività'}
+                </Button>
+            </Dialog.Footer>
+        </Dialog.Content>
+    </Dialog.Root>
 </AdminLayout>

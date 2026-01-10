@@ -105,9 +105,18 @@
     });
     let processing = $state(false);
 
-    // Tiptap Editor
+    // Edit Project Dialog Logic
+    let isEditProjectOpen = $state(false);
+    let editProjectForm = $state(null);
+    let editProjectId = $state(null);
+
+    // Tiptap Editor for new project
     let editorElement = $state(null);
     let editor = $state(null);
+    
+    // Tiptap Editor for edit project
+    let editEditorElement = $state(null);
+    let editEditor = $state(null);
 
     $effect(() => {
         if (isNewProjectOpen && editorElement && !editor) {
@@ -129,9 +138,31 @@
             });
         }
     });
+    
+    $effect(() => {
+        if (isEditProjectOpen && editEditorElement && !editEditor && editProjectForm) {
+            editEditor = new Editor({
+                element: editEditorElement,
+                extensions: [
+                    StarterKit,
+                    Link.configure({ openOnClick: false }),
+                ],
+                content: editProjectForm.content || '',
+                editorProps: {
+                    attributes: {
+                        class: "prose prose-sm max-w-none min-h-[150px] p-3 focus:outline-none",
+                    },
+                },
+                onUpdate: ({ editor }) => {
+                    editProjectForm.content = editor.getHTML();
+                },
+            });
+        }
+    });
 
     onDestroy(() => {
         if (editor) editor.destroy();
+        if (editEditor) editEditor.destroy();
     });
 
     // Confirmation Dialog
@@ -154,6 +185,43 @@
                     members: [],
                 };
                 if (editor) editor.commands.setContent("");
+                localProjects = projects;
+            },
+            onFinish: () => (processing = false),
+        });
+    }
+    
+    function openEditDialog(project) {
+        editProjectId = project.id;
+        editProjectForm = {
+            title: project.title,
+            description: project.description || '',
+            content: project.content || '',
+            status: project.status,
+            priority: project.priority,
+            committee_id: project.committee_id,
+            deadline: project.deadline || '',
+            members: project.members?.map(m => m.id) || [],
+        };
+        isEditProjectOpen = true;
+    }
+    
+    function closeEditDialog() {
+        isEditProjectOpen = false;
+        editProjectForm = null;
+        editProjectId = null;
+        if (editEditor) {
+            editEditor.destroy();
+            editEditor = null;
+        }
+    }
+    
+    function updateProject() {
+        if (!editProjectId) return;
+        processing = true;
+        router.patch(`/admin/projects/${editProjectId}`, editProjectForm, {
+            onSuccess: () => {
+                closeEditDialog();
                 localProjects = projects;
             },
             onFinish: () => (processing = false),
@@ -290,18 +358,31 @@
                                             <div></div>
                                         {/if}
 
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            class="size-6 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
-                                            onclick={(e) => {
-                                                e.stopPropagation();
-                                                projectToDeleteId = project.id;
-                                                confirmDeletionOpen = true;
-                                            }}
-                                        >
-                                            <TrashIcon class="size-3" />
-                                        </Button>
+                                        <div class="flex gap-1">
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                class="size-6 opacity-0 group-hover:opacity-100 transition-opacity text-primary hover:text-primary hover:bg-primary/10"
+                                                onclick={(e) => {
+                                                    e.stopPropagation();
+                                                    openEditDialog(project);
+                                                }}
+                                            >
+                                                <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.85 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z"/><path d="m15 5 4 4"/></svg>
+                                            </Button>
+                                            <Button
+                                                variant="ghost"
+                                                size="icon"
+                                                class="size-6 opacity-0 group-hover:opacity-100 transition-opacity text-destructive hover:text-destructive hover:bg-destructive/10"
+                                                onclick={(e) => {
+                                                    e.stopPropagation();
+                                                    projectToDeleteId = project.id;
+                                                    confirmDeletionOpen = true;
+                                                }}
+                                            >
+                                                <TrashIcon class="size-3" />
+                                            </Button>
+                                        </div>
                                     </div>
                                 </div>
                             {/each}
@@ -464,4 +545,125 @@
             </Dialog.Footer>
         </Dialog.Content>
     </Dialog.Root>
+    
+    <!-- Edit Project Dialog -->
+    {#if editProjectForm}
+    <Dialog.Root bind:open={isEditProjectOpen} onOpenChange={(open) => { if (!open) closeEditDialog(); }}>
+        <Dialog.Content class="max-w-2xl max-h-[95vh] overflow-y-auto bg-background p-0 border shadow-2xl rounded-2xl overflow-hidden flex flex-col">
+            <div class="p-6 border-b bg-muted/20">
+                <Dialog.Title class="text-xl font-bold tracking-tight">Modifica task</Dialog.Title>
+                <Dialog.Description class="text-xs text-muted-foreground mt-1">Aggiorna i dettagli del task.</Dialog.Description>
+            </div>
+
+            <div class="p-6 space-y-6 flex-1">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <!-- Left Column -->
+                    <div class="space-y-4">
+                        <div class="space-y-2">
+                            <Label for="edit-title" class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Titolo <span class="text-destructive">*</span></Label>
+                            <Input id="edit-title" bind:value={editProjectForm.title} placeholder="Es: Organizzazione stand" class="h-9 text-sm" />
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-4">
+                            <div class="space-y-2">
+                                <Label for="edit-priority" class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Priorità</Label>
+                                <select
+                                    id="edit-priority"
+                                    bind:value={editProjectForm.priority}
+                                    class="h-9 w-full rounded-md border border-input bg-background px-3 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-shadow"
+                                >
+                                    <option value="low">Bassa</option>
+                                    <option value="medium">Media</option>
+                                    <option value="high">Alta</option>
+                                </select>
+                            </div>
+
+                            <div class="space-y-2">
+                                <Label for="edit-deadline" class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Deadline</Label>
+                                <Input id="edit-deadline" type="date" bind:value={editProjectForm.deadline} class="h-9 text-xs" />
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <Label for="edit-committee" class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Comitato</Label>
+                            <select
+                                id="edit-committee"
+                                bind:value={editProjectForm.committee_id}
+                                class="h-9 w-full rounded-md border border-input bg-background px-3 text-xs focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring transition-shadow"
+                            >
+                                <option value={null}>Nessuno / Generale</option>
+                                {#each committees as c}
+                                    <option value={c.id}>{c.name}</option>
+                                {/each}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Right Column (Members) -->
+                    <div class="space-y-2 flex flex-col h-full">
+                        <Label class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Assegna a</Label>
+                        <div class="flex-1 border rounded-md p-3 max-h-[170px] md:max-h-full overflow-y-auto space-y-1.5 bg-muted/30">
+                            {#each users as user}
+                                <label class="flex items-center gap-2 text-xs cursor-pointer hover:bg-muted/50 p-1.5 rounded-md transition-all group">
+                                    <input 
+                                        type="checkbox" 
+                                        value={user.id} 
+                                        checked={editProjectForm.members.includes(user.id)}
+                                        onchange={(e) => {
+                                            if (e.target.checked) {
+                                                editProjectForm.members = [...editProjectForm.members, user.id];
+                                            } else {
+                                                editProjectForm.members = editProjectForm.members.filter(id => id !== user.id);
+                                            }
+                                        }}
+                                        class="size-3.5 rounded border-input text-primary focus:ring-primary/20 bg-background"
+                                    />
+                                    <span class="truncate group-hover:text-primary transition-colors">{user.name}</span>
+                                </label>
+                            {/each}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Full Width (Rich Text) -->
+                <div class="space-y-2">
+                    <Label class="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Descrizione Dettagliata</Label>
+                    <div class="rounded-lg border overflow-hidden bg-background focus-within:ring-1 focus-within:ring-ring transition-shadow">
+                        <div class="flex flex-wrap gap-0.5 border-b bg-muted/30 p-1.5">
+                            <Button 
+                                variant="ghost" size="icon" 
+                                class={["size-7", editEditor?.isActive('bold') ? "bg-accent text-accent-foreground" : "text-muted-foreground"].join(" ")}
+                                onclick={() => editEditor?.chain().focus().toggleBold().run()}
+                            >
+                                <BoldIcon class="size-4" />
+                            </Button>
+                            <Button 
+                                variant="ghost" size="icon" 
+                                class={["size-7", editEditor?.isActive('italic') ? "bg-accent text-accent-foreground" : "text-muted-foreground"].join(" ")}
+                                onclick={() => editEditor?.chain().focus().toggleItalic().run()}
+                            >
+                                <ItalicIcon class="size-4" />
+                            </Button>
+                            <Button 
+                                variant="ghost" size="icon" 
+                                class={["size-7", editEditor?.isActive('bulletList') ? "bg-accent text-accent-foreground" : "text-muted-foreground"].join(" ")}
+                                onclick={() => editEditor?.chain().focus().toggleBulletList().run()}
+                            >
+                                <ListIcon class="size-4" />
+                            </Button>
+                        </div>
+                        <div bind:this={editEditorElement} class="min-h-[180px] text-sm overflow-y-auto max-h-[300px]"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="p-6 border-t bg-muted/10 flex justify-end gap-3">
+                <Button variant="ghost" size="sm" class="px-5" onclick={closeEditDialog}>Annulla</Button>
+                <Button onclick={updateProject} disabled={processing} size="sm" class="px-8 shadow-sm">
+                    {processing ? "Salvataggio..." : "Salva Modifiche"}
+                </Button>
+            </div>
+        </Dialog.Content>
+    </Dialog.Root>
+    {/if}
 </AdminLayout>

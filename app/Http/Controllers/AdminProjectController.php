@@ -60,6 +60,13 @@ class AdminProjectController extends Controller
 
         $notification = new \App\Notifications\ProjectUpdateNotification($project, null, true);
         
+        \Log::info('Sending project creation notification', [
+            'project_id' => $project->id,
+            'project_title' => $project->title,
+            'users_to_notify_count' => $usersToNotify->count(),
+            'user_ids' => $usersToNotify->pluck('id')->toArray(),
+        ]);
+        
         foreach ($usersToNotify as $user) {
             $user->notify($notification);
         }
@@ -102,6 +109,15 @@ class AdminProjectController extends Controller
             
             $membersToNotify = $project->members;
             $usersToNotify = $admins->merge($membersToNotify)->unique('id');
+            
+            \Log::info('Sending project update notification', [
+                'project_id' => $project->id,
+                'project_title' => $project->title,
+                'old_status' => $oldStatus,
+                'new_status' => $project->status,
+                'users_to_notify_count' => $usersToNotify->count(),
+                'user_ids' => $usersToNotify->pluck('id')->toArray(),
+            ]);
             
             foreach ($usersToNotify as $user) {
                 $user->notify($notification);

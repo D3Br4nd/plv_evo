@@ -70,8 +70,16 @@ class AdminCommitteeController extends Controller
         ]);
 
         // Get all members for the "add member" dropdown, excluding already attached members
+        $today = now()->toDateString();
+        $currentYear = now()->year;
+        
         $availableMembers = User::whereNotIn('id', $committee->members->pluck('id'))
-            ->where('membership_status', 'active')
+            ->where(function ($query) use ($today, $currentYear) {
+                $query->whereDate('plv_expires_at', '>=', $today)
+                    ->orWhereHas('memberships', function ($q) use ($currentYear) {
+                        $q->where('year', $currentYear);
+                    });
+            })
             ->orderBy('name')
             ->get(['id', 'name', 'email']);
 

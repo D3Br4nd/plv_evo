@@ -39,13 +39,15 @@
   --chart-5: hsl(27 87% 67%);
 
   /* Sidebar tokens (dashboard-01 relies on these) */
-  --sidebar: var(--background);
+  --sidebar: hsl(210 40% 96.5%);
+  /* light blue-gray */
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: var(--accent);
+  --sidebar-accent: hsl(210 40% 92%);
+  /* slightly darker blue-gray for hover states */
   --sidebar-accent-foreground: var(--accent-foreground);
-  --sidebar-border: var(--border);
+  --sidebar-border: hsl(214.3 31.8% 91.4%);
   --sidebar-ring: var(--ring);
 }
 
@@ -80,13 +82,15 @@
   --chart-4: hsl(280 65% 60%);
   --chart-5: hsl(340 75% 55%);
 
-  --sidebar: var(--background);
+  --sidebar: hsl(217.2 32.6% 12%);
+  /* dark blue-gray */
   --sidebar-foreground: var(--foreground);
   --sidebar-primary: var(--primary);
   --sidebar-primary-foreground: var(--primary-foreground);
-  --sidebar-accent: var(--accent);
+  --sidebar-accent: hsl(217.2 32.6% 17.5%);
+  /* lighter blue-gray for hover states */
   --sidebar-accent-foreground: var(--accent-foreground);
-  --sidebar-border: var(--border);
+  --sidebar-border: hsl(217.2 32.6% 17.5%);
   --sidebar-ring: var(--ring);
 }
 
@@ -132,6 +136,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }

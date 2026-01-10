@@ -113,9 +113,20 @@ Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+// Password reset routes
+Route::get('/forgot-password', [\App\Http\Controllers\PasswordResetController::class, 'showRequestForm'])->name('password.request');
+Route::post('/forgot-password', [\App\Http\Controllers\PasswordResetController::class, 'sendResetLink'])->name('password.email');
+Route::get('/reset-password/{token}', [\App\Http\Controllers\PasswordResetController::class, 'showResetForm'])->name('password.reset');
+Route::post('/reset-password', [\App\Http\Controllers\PasswordResetController::class, 'reset'])->name('password.update');
+
 // Admin routes (protected)
 Route::middleware(['auth', 'role:super_admin,admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', AdminDashboardController::class)->name('admin.dashboard');
+    
+    // Activity log cleanup (super admin only)
+    Route::delete('/activity-logs/clear', [AdminDashboardController::class, 'clearActivityLogs'])
+        ->middleware('role:super_admin')
+        ->name('admin.activity.clear');
 
     Route::get('/profile', [AdminProfileController::class, 'edit'])->name('admin.profile.edit');
     Route::patch('/profile', [AdminProfileController::class, 'update'])->name('admin.profile.update');
