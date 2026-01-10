@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Committee;
 use App\Models\CommitteePost;
 use App\Models\User;
-use App\Models\ActivityLog;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -184,6 +183,7 @@ class AdminCommitteeController extends Controller
         
         \Illuminate\Support\Facades\Notification::send($members, new \App\Notifications\NewCommitteePost($post));
 
+
         return back()->with('flash', [
             'type' => 'success',
             'message' => 'Post pubblicato nella bacheca.',
@@ -229,13 +229,6 @@ class AdminCommitteeController extends Controller
 
         $committee->update(['image_path' => $path]);
 
-        ActivityLog::create([
-            'actor_user_id' => $request->user()?->id,
-            'action' => 'updated',
-            'subject_type' => Committee::class,
-            'subject_id' => $committee->id,
-            'summary' => 'Immagine comitato aggiornata',
-        ]);
 
         return back()->with('flash', [
             'type' => 'success',
@@ -256,13 +249,6 @@ class AdminCommitteeController extends Controller
 
         $committee->update(['image_path' => null]);
 
-        ActivityLog::create([
-            'actor_user_id' => request()->user()?->id,
-            'action' => 'updated',
-            'subject_type' => Committee::class,
-            'subject_id' => $committee->id,
-            'summary' => 'Immagine comitato rimossa',
-        ]);
 
         return back()->with('flash', [
             'type' => 'success',

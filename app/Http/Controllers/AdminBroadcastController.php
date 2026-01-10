@@ -86,6 +86,7 @@ class AdminBroadcastController extends Controller
         // Mark as sent
         $broadcast->update(['sent_at' => now()]);
 
+
         return redirect()->route('broadcasts.index')->with('flash', [
             'type' => 'success',
             'message' => "Notifica inviata a {$activeMembers->count()} soci attivi.",

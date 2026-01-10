@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\ActivityLog;
 use App\Models\Project;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -36,13 +35,6 @@ class AdminProjectController extends Controller
 
         $project = Project::create($validated);
 
-        ActivityLog::create([
-            'actor_user_id' => $request->user()?->id,
-            'action' => 'created',
-            'subject_type' => 'Project',
-            'subject_id' => $project->id,
-            'summary' => 'Creato task: '.$project->title,
-        ]);
         
         return redirect()->back()->with('success', 'Task creato.');
     }
@@ -59,13 +51,6 @@ class AdminProjectController extends Controller
 
         $project->update($validated);
 
-        ActivityLog::create([
-            'actor_user_id' => $request->user()?->id,
-            'action' => 'updated',
-            'subject_type' => 'Project',
-            'subject_id' => $project->id,
-            'summary' => 'Aggiornato task: '.$project->title,
-        ]);
 
         return redirect()->back(); // Inertia handles state preservation
     }
@@ -78,13 +63,6 @@ class AdminProjectController extends Controller
         $summary = 'Eliminato task: '.$project->title;
         $project->delete();
 
-        ActivityLog::create([
-            'actor_user_id' => request()->user()?->id,
-            'action' => 'deleted',
-            'subject_type' => 'Project',
-            'subject_id' => $project->id,
-            'summary' => $summary,
-        ]);
 
         return redirect()->back();
     }

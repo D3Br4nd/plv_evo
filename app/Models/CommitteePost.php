@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class CommitteePost extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, \App\Traits\LogsActivity;
 
     protected $fillable = [
         'committee_id',

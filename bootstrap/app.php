@@ -13,7 +13,9 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware) {
         $middleware->trustProxies(at: '*');
         
-        $middleware->web(append: [
+        $middleware->web(prepend: [
+            \App\Http\Middleware\AdjustSessionLifetime::class,
+        ], append: [
             \App\Http\Middleware\HandleInertiaRequests::class,
         ]);
 

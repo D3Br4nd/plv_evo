@@ -7,8 +7,10 @@ use App\Models\ActivityLog;
 use App\Models\Membership;
 use App\Models\Project;
 use App\Models\User;
+use App\Models\Committee;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
+use Illuminate\Support\Facades\DB;
 
 class AdminDashboardController extends Controller
 {
@@ -24,6 +26,14 @@ class AdminDashboardController extends Controller
                 'eventsUpcoming' => Event::where('start_date', '>=', now())->count(),
                 'projectsTotal' => Project::count(),
                 'projectsDone' => Project::where('status', 'done')->count(),
+                'committeeStats' => Committee::withCount('members')->get()->map(fn($c) => [
+                    'name' => $c->name,
+                    'count' => $c->members_count,
+                ]),
+                'notificationStats' => [
+                    'sent' => DB::table('notifications')->whereYear('created_at', $year)->count(),
+                    'read' => DB::table('notifications')->whereYear('created_at', $year)->whereNotNull('read_at')->count(),
+                ],
             ],
             'activity' => ActivityLog::query()
                 ->with('actor:id,name')

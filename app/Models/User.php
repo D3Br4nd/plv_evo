@@ -13,7 +13,7 @@ use NotificationChannels\WebPush\HasPushSubscriptions;
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, HasUuids, HasPushSubscriptions;
+    use HasFactory, Notifiable, HasUuids, HasPushSubscriptions, \App\Traits\LogsActivity;
 
     /**
      * The attributes that are mass assignable.

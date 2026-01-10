@@ -3,7 +3,6 @@
 namespace App\Http\Controllers;
 
 use App\Enums\UserRole;
-use App\Models\ActivityLog;
 use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
@@ -200,13 +199,6 @@ class AdminMemberController extends Controller
             'membership_status' => 'inactive',
         ]));
 
-        ActivityLog::create([
-            'actor_user_id' => $request->user()?->id,
-            'action' => 'created',
-            'subject_type' => 'User',
-            'subject_id' => $member->id,
-            'summary' => 'Creato socio: '.$member->name.($member->email ? ' ('.$member->email.')' : ''),
-        ]);
 
         // Auto-activate membership for the current year
         $currentYear = now()->year;
@@ -328,13 +320,6 @@ class AdminMemberController extends Controller
             throw $e;
         }
 
-        ActivityLog::create([
-            'actor_user_id' => $request->user()?->id,
-            'action' => 'updated',
-            'subject_type' => 'User',
-            'subject_id' => $member->id,
-            'summary' => 'Aggiornato socio: '.$member->name.($member->email ? ' ('.$member->email.')' : ''),
-        ]);
 
         return redirect()->back()->with('success', 'Socio aggiornato con successo.');
     }
@@ -347,13 +332,6 @@ class AdminMemberController extends Controller
         $summary = 'Eliminato socio: '.$member->name.($member->email ? ' ('.$member->email.')' : '');
         $member->delete();
 
-        ActivityLog::create([
-            'actor_user_id' => request()->user()?->id,
-            'action' => 'deleted',
-            'subject_type' => 'User',
-            'subject_id' => $member->id,
-            'summary' => $summary,
-        ]);
 
         return redirect()->back()->with('success', 'Socio eliminato con successo.');
     }
@@ -598,13 +576,6 @@ class AdminMemberController extends Controller
                     $existingUser->update($data);
                     $updated++;
                     
-                    ActivityLog::create([
-                        'actor_user_id' => $request->user()?->id,
-                        'action' => 'updated',
-                        'subject_type' => 'User',
-                        'subject_id' => $existingUser->id,
-                        'summary' => 'Aggiornato socio da import CSV: '.$existingUser->name,
-                    ]);
                 } else {
                     // Create new user
                     $data['password'] = Hash::make(Str::random(64));
@@ -622,13 +593,6 @@ class AdminMemberController extends Controller
                         'qr_token' => (string) Str::uuid(),
                     ]);
                     
-                    ActivityLog::create([
-                        'actor_user_id' => $request->user()?->id,
-                        'action' => 'created',
-                        'subject_type' => 'User',
-                        'subject_id' => $newUser->id,
-                        'summary' => 'Creato socio da import CSV: '.$newUser->name,
-                    ]);
 
                     // Create storage directories
                     $disk = Storage::disk('public');
@@ -676,13 +640,6 @@ class AdminMemberController extends Controller
 
         $member->update(['avatar_path' => $path]);
 
-        ActivityLog::create([
-            'actor_user_id' => $request->user()?->id,
-            'action' => 'updated',
-            'subject_type' => User::class,
-            'subject_id' => $member->id,
-            'summary' => 'Avatar aggiornato da admin',
-        ]);
 
         return redirect()->back()->with('success', 'Avatar caricato con successo.');
     }
@@ -698,13 +655,6 @@ class AdminMemberController extends Controller
 
         $member->update(['avatar_path' => null]);
 
-        ActivityLog::create([
-            'actor_user_id' => request()->user()?->id,
-            'action' => 'updated',
-            'subject_type' => User::class,
-            'subject_id' => $member->id,
-            'summary' => 'Avatar rimosso da admin',
-        ]);
 
         return redirect()->back()->with('success', 'Avatar eliminato con successo.');
     }

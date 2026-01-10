@@ -9,7 +9,7 @@ use Illuminate\Support\Facades\Storage;
 
 class Committee extends Model
 {
-    use HasFactory, HasUuids;
+    use HasFactory, HasUuids, \App\Traits\LogsActivity;
 
     protected $fillable = [
         'name',
