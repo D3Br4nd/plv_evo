@@ -26,6 +26,11 @@ trait LogsActivity
     {
         // Don't log if there is no authenticated user (e.g. during seeding or CLI)
         // unless we want to log system actions too.
+        // Only log if there is an authenticated user
+        if (!auth()->check()) {
+            return;
+        }
+
         $actorId = auth()->id();
         
         $summary = self::getActivitySummary($model, $action);
@@ -60,6 +65,17 @@ trait LogsActivity
         ];
 
         $modelName = $map[$class] ?? class_basename($model);
+        
+        if ($class === \App\Models\CommitteeUser::class) {
+            $model->loadMissing(['committee', 'user']);
+            $userName = $model->user?->name ?? 'Socio sconosciuto';
+            $committeeName = $model->committee?->name ?? 'comitato sconosciuto';
+            
+            return $action === 'created' 
+                ? "Socio {$userName} aggiunto al comitato {$committeeName}"
+                : "Socio {$userName} rimosso dal comitato {$committeeName}";
+        }
+
         $title = $model->title ?? $model->name ?? $model->id;
 
         switch ($action) {

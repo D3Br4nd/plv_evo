@@ -62,7 +62,6 @@ class MemberInvitationAcceptController extends Controller
                 'year' => $currentYear,
                 'paid_at' => now(), 
                 'amount' => 0,
-                'qr_token' => (string) \Illuminate\Support\Str::uuid(),
             ]);
         }
 

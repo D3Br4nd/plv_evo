@@ -84,7 +84,6 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('user_id')->constrained()->cascadeOnDelete();
             $table->integer('year');
-            $table->string('qr_token')->unique();
             $table->string('status')->default('active');
             $table->timestamp('paid_at')->nullable();
             $table->decimal('amount', 8, 2)->default(0);
@@ -157,8 +156,7 @@ return new class extends Migration
 
         // Committee Members (Pivot)
         Schema::create('committee_user', function (Blueprint $table) {
-            // No primary key 'id' to fix attach() issues in Svelte/Inertia context if needed, but standard pivot usually OK.
-            // keeping it simple: no ID, just composite unique.
+            $table->uuid('id')->primary();
             $table->foreignUuid('committee_id')->constrained()->cascadeOnDelete();
             $table->foreignUuid('user_id')->constrained()->cascadeOnDelete();
             $table->string('role')->nullable(); // President, Secretary, etc within committee

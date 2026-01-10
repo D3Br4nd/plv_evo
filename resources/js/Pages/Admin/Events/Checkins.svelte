@@ -10,19 +10,21 @@
     let { event, checkins } = $props();
     let flash = $derived($page.props.flash);
 
-    let qr_token = $state("");
+    let qr_code = $state("");
     let processing = $state(false);
-    let headerTitle = $derived.by(() => `Check-in · ${event?.title || ""}`.trim());
+    let headerTitle = $derived.by(() =>
+        `Check-in · ${event?.title || ""}`.trim(),
+    );
 
     function submit() {
-        if (!qr_token.trim()) return;
+        if (!qr_code.trim()) return;
         processing = true;
         router.post(
             `/admin/events/${event.id}/checkins`,
-            { qr_token: qr_token.trim() },
+            { qr_code: qr_code.trim() },
             {
                 preserveScroll: true,
-                onSuccess: () => (qr_token = ""),
+                onSuccess: () => (qr_code = ""),
                 onFinish: () => (processing = false),
             },
         );
@@ -34,12 +36,12 @@
         <Button variant="outline" onclick={() => router.get("/admin/events")}>
             Torna agli eventi
         </Button>
-            <Button
-                variant="outline"
-                href={`/admin/events/${event.id}/checkins/export`}
-            >
-                Esporta CSV
-            </Button>
+        <Button
+            variant="outline"
+            href={`/admin/events/${event.id}/checkins/export`}
+        >
+            Esporta CSV
+        </Button>
     {/snippet}
 
     <div class="space-y-6">
@@ -51,14 +53,15 @@
             <Card.Header>
                 <Card.Title>Registra presenza</Card.Title>
                 <Card.Description>
-                    Inserisci il token QR (scanner in arrivo, intanto funziona anche incollando).
+                    Inserisci il codice UUID del socio (tramite scanner o
+                    copia-incolla).
                 </Card.Description>
             </Card.Header>
             <Card.Content class="space-y-3">
                 <div class="flex gap-2">
                     <Input
-                        bind:value={qr_token}
-                        placeholder="qr_token..."
+                        bind:value={qr_code}
+                        placeholder="UUID del socio..."
                         class="flex-1 font-mono text-xs"
                         onkeydown={(e) => e.key === "Enter" && submit()}
                     />
@@ -71,15 +74,21 @@
                     <div class="text-sm text-destructive">{flash.error}</div>
                 {/if}
                 {#if flash?.success}
-                    <div class="text-sm text-green-600 dark:text-green-400">{flash.success}</div>
+                    <div class="text-sm text-green-600 dark:text-green-400">
+                        {flash.success}
+                    </div>
                 {/if}
             </Card.Content>
         </Card.Root>
 
         <Card.Root>
-            <Card.Header class="flex-row items-center justify-between space-y-0">
+            <Card.Header
+                class="flex-row items-center justify-between space-y-0"
+            >
                 <Card.Title class="text-base">Ultimi check-in</Card.Title>
-                <div class="text-xs text-muted-foreground">Totale: {checkins.total}</div>
+                <div class="text-xs text-muted-foreground">
+                    Totale: {checkins.total}
+                </div>
             </Card.Header>
             <Card.Content class="p-0">
                 <Table.Root>
@@ -95,7 +104,9 @@
                         {#each checkins.data as c (c.id)}
                             <Table.Row>
                                 <Table.Cell class="text-muted-foreground">
-                                    {new Date(c.checked_in_at).toLocaleString("it-IT")}
+                                    {new Date(c.checked_in_at).toLocaleString(
+                                        "it-IT",
+                                    )}
                                 </Table.Cell>
                                 <Table.Cell class="font-medium">
                                     {c.membership?.user?.name || "-"}
@@ -114,5 +125,3 @@
         </Card.Root>
     </div>
 </AdminLayout>
-
-

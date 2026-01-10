@@ -15,7 +15,6 @@ class Membership extends Model
         'year',
         'paid_at',
         'amount',
-        'qr_token',
         'status',
     ];
 

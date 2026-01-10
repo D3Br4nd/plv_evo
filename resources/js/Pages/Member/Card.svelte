@@ -1,16 +1,16 @@
 <script>
-    import { router } from "@inertiajs/svelte";
+    import { router, page } from "@inertiajs/svelte";
     import QRCode from "qrcode";
     import MemberLayout from "@/layouts/MemberLayout.svelte";
     import { Button } from "@/lib/components/ui/button";
 
     let { year, membership } = $props();
     let qrDataUrl = $state(null);
-    let token = $derived(membership?.qr_token);
+    let uuid = $derived($page.props.auth?.user?.id);
 
     async function generate() {
-        if (!token) return;
-        qrDataUrl = await QRCode.toDataURL(token, {
+        if (!uuid) return;
+        qrDataUrl = await QRCode.toDataURL(uuid, {
             width: 260,
             margin: 2,
             color: { dark: "#000000", light: "#FFFFFF" },
@@ -38,14 +38,20 @@
             {#if membership}
                 <div class="flex justify-center">
                     {#if qrDataUrl}
-                        <img src={qrDataUrl} alt="QR Tessera" class="rounded bg-white p-2" />
+                        <img
+                            src={qrDataUrl}
+                            alt="QR Tessera"
+                            class="rounded bg-white p-2"
+                        />
                     {:else}
-                        <div class="text-sm text-muted-foreground">Generazione QR...</div>
+                        <div class="text-sm text-muted-foreground">
+                            Generazione QR...
+                        </div>
                     {/if}
                 </div>
 
                 <div class="text-xs text-muted-foreground break-all">
-                    Token: {membership.qr_token}
+                    Socio UUID: {uuid}
                 </div>
             {:else}
                 <div class="text-sm text-red-400">
@@ -55,5 +61,3 @@
         </div>
     </div>
 </MemberLayout>
-
-

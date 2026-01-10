@@ -23,7 +23,6 @@ class AdminMembershipController extends Controller
                 'year' => $year,
                 'paid_at' => now(), 
                 'amount' => 0,
-                'qr_token' => (string) \Illuminate\Support\Str::uuid(),
             ]);
             \Illuminate\Support\Facades\Log::info('Membership created', ['member_id' => $member->id, 'year' => $year]);
         }

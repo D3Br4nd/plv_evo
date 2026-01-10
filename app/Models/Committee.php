@@ -42,7 +42,8 @@ class Committee extends Model
     public function members()
     {
         return $this->belongsToMany(User::class, 'committee_user')
-            ->withPivot('role', 'joined_at')
+            ->using(CommitteeUser::class)
+            ->withPivot('id', 'role', 'joined_at')
             ->withTimestamps();
     }
 

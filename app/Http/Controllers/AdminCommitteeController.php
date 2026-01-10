@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Committee;
 use App\Models\CommitteePost;
 use App\Models\User;
+use App\Models\CommitteeUser;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Inertia\Inertia;
@@ -122,7 +123,9 @@ class AdminCommitteeController extends Controller
 
         $committee = Committee::findOrFail($committeeId);
 
-        $committee->members()->attach($validated['user_id'], [
+        CommitteeUser::create([
+            'committee_id' => $committee->id,
+            'user_id' => $validated['user_id'],
             'role' => $validated['role'] ?? null,
             'joined_at' => now(),
         ]);
@@ -139,7 +142,9 @@ class AdminCommitteeController extends Controller
     public function detachMember(string $committeeId, string $userId)
     {
         $committee = Committee::findOrFail($committeeId);
-        $committee->members()->detach($userId);
+        CommitteeUser::where('committee_id', $committeeId)
+            ->where('user_id', $userId)
+            ->first()?->delete();
 
         return back()->with('flash', [
             'type' => 'success',

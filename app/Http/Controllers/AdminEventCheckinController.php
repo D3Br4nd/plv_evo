@@ -29,19 +29,23 @@ class AdminEventCheckinController extends Controller
     public function store(Request $request, Event $event)
     {
         $validated = $request->validate([
-            'qr_token' => 'required|string|min:10|max:255',
+            'qr_code' => 'required|uuid',
         ]);
 
         $eventYear = (int) $event->start_date->format('Y');
 
-        $membership = Membership::query()
-            ->where('qr_token', $validated['qr_token'])
+        $user = \App\Models\User::find($validated['qr_code']);
+
+        if (! $user) {
+            return redirect()->back()->with('error', 'Socio non trovato.');
+        }
+
+        $membership = $user->memberships()
             ->where('year', $eventYear)
-            ->with('user')
             ->first();
 
         if (! $membership) {
-            return redirect()->back()->with('error', 'Tessera non valida per questo evento/anno.');
+            return redirect()->back()->with('error', 'Tessera non valida per questo anno ('.$eventYear.').');
         }
 
         if ($membership->status !== 'active') {

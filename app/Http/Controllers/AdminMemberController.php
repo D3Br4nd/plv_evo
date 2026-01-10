@@ -206,7 +206,6 @@ class AdminMemberController extends Controller
             'year' => $currentYear,
             'paid_at' => now(), 
             'amount' => 0,
-            'qr_token' => (string) \Illuminate\Support\Str::uuid(),
         ]);
 
         // Create invitation + email (only if email is provided)
@@ -590,7 +589,6 @@ class AdminMemberController extends Controller
                         'year' => $currentYear,
                         'paid_at' => now(),
                         'amount' => 0,
-                        'qr_token' => (string) Str::uuid(),
                     ]);
                     
 
