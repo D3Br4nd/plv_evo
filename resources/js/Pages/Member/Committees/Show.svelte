@@ -227,9 +227,6 @@
                 <Card.Root>
                     <Card.Header>
                         <Card.Title>Informazioni</Card.Title>
-                        <Card.Description
-                            >Dettagli sul comitato</Card.Description
-                        >
                     </Card.Header>
                     <Card.Content class="space-y-4">
                         <div>
