@@ -3,31 +3,86 @@
     import { page } from "@inertiajs/svelte";
     import { router } from "@inertiajs/svelte";
 
+    import { onMount } from "svelte";
     import MemberLayout from "@/layouts/MemberLayout.svelte";
-    import { Button } from "@/lib/components/ui/button";
+    import { Button, buttonVariants } from "@/lib/components/ui/button";
     import { Input } from "@/lib/components/ui/input";
     import * as Card from "@/lib/components/ui/card";
+    import * as Tooltip from "@/lib/components/ui/tooltip/index.js";
+    import * as Dialog from "@/lib/components/ui/dialog";
+    import { cn } from "@/lib/utils/cn";
+    import { Download, Info } from "lucide-svelte";
+    import { toast } from "svelte-sonner";
 
     let { user, vapidPublicKey, hasPushSubscription } = $props();
     let flash = $derived($page.props.flash);
 
     // ---- PWA install prompt ----
     let deferredPrompt = $state(null);
-    let canInstall = $derived(!!deferredPrompt);
+    let isInstalled = $state(false);
+    let isIos = $state(false);
 
-    if (typeof window !== "undefined") {
-        window.addEventListener("beforeinstallprompt", (e) => {
-            e.preventDefault();
-            deferredPrompt = e;
-        });
+    function computeInstalled() {
+        try {
+            const standalone =
+                window.matchMedia?.("(display-mode: standalone)")?.matches ||
+                window.navigator?.standalone === true;
+            isInstalled = !!standalone;
+        } catch (e) {
+            isInstalled = false;
+        }
     }
 
     async function installPwa() {
-        if (!deferredPrompt) return;
-        deferredPrompt.prompt();
-        await deferredPrompt.userChoice;
-        deferredPrompt = null;
+        computeInstalled();
+        if (isInstalled) {
+            toast.message("App già installata.");
+            return;
+        }
+
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            const choice = await deferredPrompt.userChoice;
+            deferredPrompt = null;
+            if (choice?.outcome === "accepted") toast.success("Installazione avviata.");
+            else toast.message("Installazione annullata.");
+            return;
+        }
+
+        // iOS Safari (no prompt)
+        if (isIos) {
+            toast.message("Su iPhone/iPad: Condividi → Aggiungi a Home.");
+            return;
+        }
+
+        toast.message("Apri il menu del browser e scegli “Installa app”.");
     }
+
+    onMount(() => {
+        const ua = window.navigator?.userAgent?.toLowerCase?.() || "";
+        isIos = /iphone|ipad|ipod/.test(ua);
+
+        computeInstalled();
+
+        const onBip = (e) => {
+            // Chrome/Edge on Android: capture install prompt
+            e.preventDefault();
+            deferredPrompt = e;
+        };
+
+        const onInstalled = () => {
+            deferredPrompt = null;
+            computeInstalled();
+        };
+
+        window.addEventListener("beforeinstallprompt", onBip);
+        window.addEventListener("appinstalled", onInstalled);
+
+        return () => {
+            window.removeEventListener("beforeinstallprompt", onBip);
+            window.removeEventListener("appinstalled", onInstalled);
+        };
+    });
 
     // ---- Password ----
     let pwd = $state({
@@ -179,13 +234,125 @@
                     Installa l’app sul telefono per accesso rapido e migliore esperienza.
                 </Card.Description>
             </Card.Header>
-            <Card.Content class="space-y-3">
-                <div class="text-sm text-muted-foreground">
-                    Se non vedi il bottone, usa “Aggiungi a schermata Home” dal menu del browser.
+            <Card.Content class="space-y-4">
+                <div class="space-y-2 text-sm text-muted-foreground">
+                    <p>
+                        <span class="font-medium text-foreground">iPhone/iPad:</span>
+                        Tocca l'icona <span class="font-medium text-foreground">Condividi</span> e poi
+                        <span class="font-medium text-foreground">Aggiungi a Home</span>.
+                    </p>
+                    <p>
+                        <span class="font-medium text-foreground">Android:</span>
+                        Tocca il tasto qui sotto oppure <span class="font-medium text-foreground">Menu ⋮</span> →
+                        <span class="font-medium text-foreground">Installa app</span>.
+                    </p>
                 </div>
-                <Button onclick={installPwa} disabled={!canInstall}>
-                    {canInstall ? "Installa" : "Installazione non disponibile"}
-                </Button>
+
+                <div class="flex items-center gap-2">
+                        <Button variant="default" onclick={installPwa} disabled={isInstalled}>
+                            <Download class="mr-2 size-4" />
+                            {isInstalled ? "App installata" : "Installa app"}
+                        </Button>
+
+                    <!-- Desktop: tooltip (hover). Mobile: dialog (tap). -->
+                    <div class="hidden sm:block">
+                        <Tooltip.Provider>
+                            <Tooltip.Root>
+                                <Tooltip.Trigger>
+                                    {#snippet child({ props })}
+                                        <button
+                                            {...props}
+                                            type="button"
+                                            class={cn(
+                                                buttonVariants({ variant: "ghost", size: "icon" }),
+                                                "h-10 w-10"
+                                            )}
+                                            aria-label="Istruzioni installazione"
+                                        >
+                                            <div class="flex items-center justify-center">
+                                                <Info class="size-4" />
+                                            </div>
+                                        </button>
+                                    {/snippet}
+                                </Tooltip.Trigger>
+                                <Tooltip.Content class="max-w-xs" side="bottom" sideOffset={8}>
+                                    <div class="space-y-3 text-sm">
+                                        <div class="font-medium">Installazione PWA</div>
+                                        <div class="space-y-2">
+                                            <div class="font-medium text-xs text-muted-foreground">Android (Chrome)</div>
+                                            <div class="text-xs text-muted-foreground">
+                                                Tocca <span class="font-medium text-foreground">Installa app</span> oppure:
+                                                menu ⋮ → <span class="font-medium text-foreground">Installa app</span>.
+                                            </div>
+                                        </div>
+                                        <div class="space-y-2">
+                                            <div class="font-medium text-xs text-muted-foreground">iPhone/iPad (Safari)</div>
+                                            <div class="text-xs text-muted-foreground">
+                                                Tocca <span class="font-medium text-foreground">Condividi</span> →
+                                                <span class="font-medium text-foreground">Aggiungi a Home</span>.
+                                            </div>
+                                        </div>
+                                    </div>
+                                </Tooltip.Content>
+                            </Tooltip.Root>
+                        </Tooltip.Provider>
+                    </div>
+
+                    <div class="sm:hidden">
+                        <Dialog.Root>
+                            <Dialog.Trigger>
+                                {#snippet child({ props })}
+                                    <button
+                                        {...props}
+                                        type="button"
+                                        class={cn(
+                                            buttonVariants({ variant: "ghost", size: "icon" }),
+                                            "h-10 w-10"
+                                        )}
+                                        aria-label="Istruzioni installazione"
+                                    >
+                                        <div class="flex items-center justify-center">
+                                            <Info class="size-4" />
+                                        </div>
+                                    </button>
+                                {/snippet}
+                            </Dialog.Trigger>
+                            <Dialog.Content class="max-w-md">
+                                <Dialog.Header>
+                                    <Dialog.Title>Installazione PWA</Dialog.Title>
+                                    <Dialog.Description>
+                                        Procedura di installazione su Android e iOS.
+                                    </Dialog.Description>
+                                </Dialog.Header>
+
+                                <div class="mt-4 space-y-4 text-sm">
+                                    <div class="space-y-1">
+                                        <div class="font-medium">Android (Chrome)</div>
+                                        <div class="text-muted-foreground">
+                                            Tocca <span class="font-medium text-foreground">Installa app</span> oppure:
+                                            menu ⋮ → <span class="font-medium text-foreground">Installa app</span>.
+                                        </div>
+                                    </div>
+                                    <div class="space-y-1">
+                                        <div class="font-medium">iPhone/iPad (Safari)</div>
+                                        <div class="text-muted-foreground">
+                                            Tocca <span class="font-medium text-foreground">Condividi</span> →
+                                            <span class="font-medium text-foreground">Aggiungi a Home</span>.
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <Dialog.Footer class="mt-6">
+                                    <Dialog.Close>
+                                        {#snippet child({ props })}
+                                            <Button {...props} variant="outline">Chiudi</Button>
+                                        {/snippet}
+                                    </Dialog.Close>
+                                </Dialog.Footer>
+                            </Dialog.Content>
+                        </Dialog.Root>
+                    </div>
+                </div>
             </Card.Content>
         </Card.Root>
 
