@@ -3,9 +3,12 @@
 
 	let {
 		open = $bindable(false),
-		value = $bindable(),
+		value = $bindable(""),
+		children,
 		...restProps
 	} = $props();
 </script>
 
-<SelectPrimitive.Root bind:open bind:value={value} {...restProps} />
+<SelectPrimitive.Root bind:open bind:value {...restProps}>
+	{@render children?.()}
+</SelectPrimitive.Root>

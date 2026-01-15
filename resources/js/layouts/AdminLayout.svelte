@@ -6,7 +6,12 @@
     import FlashToasts from "@/lib/components/FlashToasts.svelte";
     import { Toaster } from "svelte-sonner";
 
-    let { title = "Admin", children, headerActions, breadcrumbs = [] } = $props();
+    let {
+        title = "Admin",
+        children,
+        headerActions = undefined,
+        breadcrumbs = [],
+    } = $props();
 </script>
 
 <svelte:head>

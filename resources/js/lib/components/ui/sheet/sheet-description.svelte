@@ -4,7 +4,8 @@
 
 	let {
 		ref = $bindable(null),
-		class: className,
+		class: className = "",
+		children,
 		...restProps
 	} = $props();
 </script>
@@ -14,4 +15,6 @@
 	data-slot="sheet-description"
 	class={cn("text-muted-foreground text-sm", className)}
 	{...restProps}
-/>
+>
+	{@render children?.()}
+</SheetPrimitive.Description>

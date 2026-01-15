@@ -1,7 +1,9 @@
 <script>
 	import { Dialog as SheetPrimitive } from "bits-ui";
 
-	let { ...restProps } = $props();
+	let { children, ...restProps } = $props();
 </script>
 
-<SheetPrimitive.Portal {...restProps} />
+<SheetPrimitive.Portal {...restProps}>
+	{@render children?.()}
+</SheetPrimitive.Portal>

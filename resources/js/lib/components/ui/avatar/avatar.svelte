@@ -5,7 +5,8 @@
 	let {
 		ref = $bindable(null),
 		loadingStatus = $bindable("loading"),
-		class: className,
+		class: className = "",
+		children,
 		...restProps
 	} = $props();
 </script>
@@ -16,4 +17,6 @@
 	data-slot="avatar"
 	class={cn("relative flex size-8 shrink-0 overflow-hidden rounded-full", className)}
 	{...restProps}
-/>
+>
+	{@render children?.()}
+</AvatarPrimitive.Root>

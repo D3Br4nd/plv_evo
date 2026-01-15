@@ -36,8 +36,12 @@ class MemberCommitteeController extends Controller
     {
         $user = $request->user();
         
-        // Ensure the user is a member of this committee
-        if (!$committee->members()->where('users.id', $user->id)->exists()) {
+        // Ensure the user is a member of this committee, or is an admin
+        $userRole = $user->role instanceof \UnitEnum ? $user->role->value : $user->role;
+        $isMember = $committee->members()->where('users.id', $user->id)->exists();
+        $isAdmin = in_array($userRole, ['admin', 'super_admin'], true);
+
+        if (!$isMember && !$isAdmin) {
             abort(403);
         }
 
@@ -66,8 +70,12 @@ class MemberCommitteeController extends Controller
     {
         $user = $request->user();
 
-        // Ensure user belongs to the committee of this post
-        if (!$post->committee->members()->where('users.id', $user->id)->exists()) {
+        // Ensure user belongs to the committee of this post, or is an admin
+        $userRole = $user->role instanceof \UnitEnum ? $user->role->value : $user->role;
+        $isMember = $post->committee->members()->where('users.id', $user->id)->exists();
+        $isAdmin = in_array($userRole, ['admin', 'super_admin'], true);
+
+        if (!$isMember && !$isAdmin) {
             abort(403);
         }
 
@@ -83,8 +91,12 @@ class MemberCommitteeController extends Controller
     {
         $user = $request->user();
 
-        // Ensure user belongs to the committee of this post
-        if (!$post->committee->members()->where('users.id', $user->id)->exists()) {
+        // Ensure user belongs to the committee of this post, or is an admin
+        $userRole = $user->role instanceof \UnitEnum ? $user->role->value : $user->role;
+        $isMember = $post->committee->members()->where('users.id', $user->id)->exists();
+        $isAdmin = in_array($userRole, ['admin', 'super_admin'], true);
+
+        if (!$isMember && !$isAdmin) {
             abort(403);
         }
 

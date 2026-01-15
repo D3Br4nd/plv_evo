@@ -5,6 +5,7 @@
     import { Badge } from "@/lib/components/ui/badge";
     import * as Card from "@/lib/components/ui/card";
     import * as Table from "@/lib/components/ui/table";
+    import * as AlertDialog from "@/lib/components/ui/alert-dialog";
     import PlusIcon from "@tabler/icons-svelte/icons/plus";
     import PencilIcon from "@tabler/icons-svelte/icons/pencil";
     import TrashIcon from "@tabler/icons-svelte/icons/trash";
@@ -12,10 +13,19 @@
 
     let { pages } = $props();
 
-    function remove(page) {
-        if (!confirm(`Eliminare la pagina "${page.title}"?`)) return;
-        router.delete(`/admin/content-pages/${page.id}`, {
+    let pageToDelete = $state(null);
+
+    function confirmDelete(page) {
+        pageToDelete = page;
+    }
+
+    function doDelete() {
+        if (!pageToDelete) return;
+        router.delete(`/admin/content-pages/${pageToDelete.id}`, {
             preserveScroll: true,
+            onFinish: () => {
+                pageToDelete = null;
+            },
         });
     }
 </script>
@@ -112,7 +122,7 @@
                                         <Button
                                             variant="ghost"
                                             size="icon"
-                                            onclick={() => remove(p)}
+                                            onclick={() => confirmDelete(p)}
                                             title="Elimina"
                                             class="text-destructive hover:text-destructive"
                                         >
@@ -127,4 +137,28 @@
             </Card.Content>
         </Card.Root>
     </div>
+
+    <AlertDialog.Root open={pageToDelete !== null}>
+        <AlertDialog.Content>
+            <AlertDialog.Header>
+                <AlertDialog.Title>Conferma Eliminazione</AlertDialog.Title>
+                <AlertDialog.Description>
+                    Sei sicuro di voler eliminare la pagina "<strong
+                        >{pageToDelete?.title}</strong
+                    >"? Questa azione non può essere annullata.
+                </AlertDialog.Description>
+            </AlertDialog.Header>
+            <AlertDialog.Footer>
+                <AlertDialog.Cancel onclick={() => (pageToDelete = null)}
+                    >Annulla</AlertDialog.Cancel
+                >
+                <AlertDialog.Action
+                    onclick={doDelete}
+                    class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                    Elimina
+                </AlertDialog.Action>
+            </AlertDialog.Footer>
+        </AlertDialog.Content>
+    </AlertDialog.Root>
 </AdminLayout>

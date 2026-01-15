@@ -1,7 +1,9 @@
 <script>
 	import { Popover as PopoverPrimitive } from "bits-ui";
 
-	let { ...restProps } = $props();
+	let { children, ...restProps } = $props();
 </script>
 
-<PopoverPrimitive.Portal {...restProps} />
+<PopoverPrimitive.Portal {...restProps}>
+	{@render children?.()}
+</PopoverPrimitive.Portal>

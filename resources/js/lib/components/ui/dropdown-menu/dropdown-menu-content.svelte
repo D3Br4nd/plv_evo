@@ -6,7 +6,8 @@
 		ref = $bindable(null),
 		sideOffset = 4,
 		portalProps,
-		class: className,
+		class: className = "",
+		children,
 		...restProps
 	} = $props();
 </script>
@@ -21,5 +22,7 @@
 			className
 		)}
 		{...restProps}
-	/>
+	>
+		{@render children?.()}
+	</DropdownMenuPrimitive.Content>
 </DropdownMenuPortal>

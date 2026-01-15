@@ -4,7 +4,8 @@
 
 	let {
 		ref = $bindable(null),
-		class: className,
+		class: className = "",
+		children,
 		...restProps
 	} = $props();
 </script>
@@ -14,4 +15,6 @@
 	data-slot="tabs-content"
 	class={cn("flex-1 outline-none", className)}
 	{...restProps}
-/>
+>
+	{@render children?.()}
+</TabsPrimitive.Content>

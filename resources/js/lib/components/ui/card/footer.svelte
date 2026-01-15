@@ -1,6 +1,6 @@
 <script lang="ts">
   import { cn } from "@/lib/utils/cn";
-  let { class: className, children } = $props<{ class?: string; children?: any }>();
+  let { class: className = "", children } = $props<{ class?: string; children?: any }>();
 </script>
 
 <div class={cn("flex items-center p-6 pt-0", className)}>

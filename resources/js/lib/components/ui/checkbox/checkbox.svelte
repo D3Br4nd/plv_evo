@@ -8,7 +8,7 @@
 		ref = $bindable(null),
 		checked = $bindable(false),
 		indeterminate = $bindable(false),
-		class: className,
+		class: className = "",
 		...restProps
 	} = $props();
 </script>

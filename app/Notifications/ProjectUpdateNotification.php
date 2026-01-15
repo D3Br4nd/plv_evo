@@ -37,13 +37,16 @@ class ProjectUpdateNotification extends Notification
             ? "È stato creato un nuovo task in stato {$statusLabel}."
             : "Lo stato è cambiato in {$statusLabel}.";
 
-        $role = $notifiable->role instanceof \UnitEnum ? $notifiable->role->value : $notifiable->role;
+        $role = (isset($notifiable->role) && $notifiable->role instanceof \UnitEnum) 
+            ? $notifiable->role->value 
+            : ($notifiable->role ?? null);
+            
         $isAdmin = in_array($role, ['super_admin', 'admin']);
 
         return [
             'title' => $title,
             'body' => $body,
-            'url' => $isAdmin ? '/admin/projects' : "/me/projects/{$this->project->id}",
+            'url' => $isAdmin ? "/admin/projects/{$this->project->id}" : "/me/projects/{$this->project->id}",
             'type' => 'project_update',
             'project_id' => $this->project->id,
             'status' => $this->project->status,

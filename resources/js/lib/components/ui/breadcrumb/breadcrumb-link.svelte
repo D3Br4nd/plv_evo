@@ -3,7 +3,7 @@
 
 	let {
 		ref = $bindable(null),
-		class: className,
+		class: className = "",
 		href = undefined,
 		child,
 		children,

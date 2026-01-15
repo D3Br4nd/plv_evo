@@ -4,7 +4,7 @@
 		ref = $bindable(null),
 		children,
 		child,
-		class: className,
+		class: className = "",
 		...restProps
 	} = $props();
 

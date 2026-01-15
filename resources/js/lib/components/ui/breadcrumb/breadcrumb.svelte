@@ -1,7 +1,7 @@
 <script>
 	let {
 		ref = $bindable(null),
-		class: className,
+		class: className = "",
 		children,
 		...restProps
 	} = $props();

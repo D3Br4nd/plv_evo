@@ -3,7 +3,7 @@
   import { cn } from "@/lib/utils/cn";
 
   // This component includes Portal + Overlay for convenience (shadcn pattern).
-  let { class: className, children, ...rest } = $props<any>();
+  let { class: className = "", children, ...rest } = $props<any>();
 </script>
 
 <Dialog.Portal>

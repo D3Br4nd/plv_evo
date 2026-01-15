@@ -200,7 +200,7 @@
             status: project.status,
             priority: project.priority,
             committee_id: project.committee_id,
-            deadline: project.deadline || '',
+            deadline: project.deadline ? project.deadline.split('T')[0] : '',
             members: project.members?.map(m => m.id) || [],
         };
         isEditProjectOpen = true;

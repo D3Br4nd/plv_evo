@@ -6,7 +6,8 @@
 		api = $bindable(null),
 		ref = $bindable(null),
 		value = $bindable(""),
-		class: className,
+		class: className = "",
+		children,
 		...restProps
 	} = $props();
 </script>
@@ -21,4 +22,6 @@
 		className
 	)}
 	{...restProps}
-/>
+>
+	{@render children?.()}
+</CommandPrimitive.Root>

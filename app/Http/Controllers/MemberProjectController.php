@@ -22,8 +22,13 @@ class MemberProjectController extends Controller
 
     public function show(Project $project)
     {
-        // Ensure user is member of the project
-        if (!$project->members()->where('users.id', auth()->id())->exists()) {
+        // Ensure user is member of the project, or is an admin
+        $user = auth()->user();
+        $userRole = $user->role instanceof \UnitEnum ? $user->role->value : $user->role;
+        $isMember = $project->members()->where('users.id', $user->id)->exists();
+        $isAdmin = in_array($userRole, ['admin', 'super_admin'], true);
+
+        if (!$isMember && !$isAdmin) {
             abort(403);
         }
 
@@ -36,8 +41,13 @@ class MemberProjectController extends Controller
 
     public function update(Request $request, Project $project)
     {
-        // Ensure user is member of the project
-        if (!$project->members()->where('users.id', auth()->id())->exists()) {
+        // Ensure user is member of the project, or is an admin
+        $user = auth()->user();
+        $userRole = $user->role instanceof \UnitEnum ? $user->role->value : $user->role;
+        $isMember = $project->members()->where('users.id', $user->id)->exists();
+        $isAdmin = in_array($userRole, ['admin', 'super_admin'], true);
+
+        if (!$isMember && !$isAdmin) {
             abort(403);
         }
 

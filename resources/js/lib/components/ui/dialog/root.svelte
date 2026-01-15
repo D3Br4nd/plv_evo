@@ -2,11 +2,9 @@
   import { Dialog } from "bits-ui";
 
   // Pass-through wrapper for Bits UI Dialog.Root
-  let { children, ...rest } = $props<any>();
+  let { open = $bindable(false), children, ...rest } = $props<any>();
 </script>
 
-<Dialog.Root {...rest}>
+<Dialog.Root bind:open {...rest}>
   {@render children?.()}
 </Dialog.Root>
-
-

@@ -216,22 +216,27 @@ class AdminCommitteeController extends Controller
         // Load relations needed for the notification
         $post->load(['committee', 'author']);
 
-        // Notify all committee members except the author
-        $members = $committee->members()->where('users.id', '!=', auth()->id())->get();
+        // Notify all committee members AND admins/super_admins
+        $admins = \App\Models\User::whereIn('role', [\App\Enums\UserRole::Admin->value, \App\Enums\UserRole::SuperAdmin->value])->get();
+        $committeeMembers = $committee->members;
+        
+        $usersToNotify = $admins->merge($committeeMembers)
+            ->unique('id')
+            ->reject(fn($user) => $user->id === auth()->id()); // Still exclude author but more safely
         
         \Log::info('Sending committee post notification', [
             'post_id' => $post->id,
             'committee_id' => $committee->id,
             'committee_name' => $post->committee->name,
             'author_name' => $post->author->name,
-            'members_count' => $members->count(),
-            'member_ids' => $members->pluck('id')->toArray(),
+            'users_to_notify_count' => $usersToNotify->count(),
+            'user_ids' => $usersToNotify->pluck('id')->toArray(),
         ]);
         
-        \Illuminate\Support\Facades\Notification::send($members, new \App\Notifications\NewCommitteePost($post));
+        \Illuminate\Support\Facades\Notification::send($usersToNotify, new \App\Notifications\NewCommitteePost($post));
 
 
-        return back()->with('flash', [
+        return redirect()->route('committees.show', $committeeId)->with('flash', [
             'type' => 'success',
             'message' => 'Post pubblicato nella bacheca.',
         ]);

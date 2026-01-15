@@ -4,7 +4,8 @@
 
 	let {
 		ref = $bindable(null),
-		class: className,
+		class: className = "",
+		children,
 		...restProps
 	} = $props();
 </script>
@@ -14,4 +15,6 @@
 	data-slot="command-empty"
 	class={cn("py-6 text-center text-sm", className)}
 	{...restProps}
-/>
+>
+	{@render children?.()}
+</CommandPrimitive.Empty>

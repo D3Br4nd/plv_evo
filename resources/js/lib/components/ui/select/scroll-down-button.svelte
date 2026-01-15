@@ -2,7 +2,7 @@
   import { Select } from "bits-ui";
   import { cn } from "@/lib/utils/cn";
   import ChevronDown from "lucide-svelte/dist/icons/chevron-down.svelte";
-  let { class: className, children, ...rest } = $props<any>();
+  let { class: className = "", children, ...rest } = $props<any>();
 </script>
 
 <Select.ScrollDownButton

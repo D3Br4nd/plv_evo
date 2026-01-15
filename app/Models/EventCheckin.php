@@ -13,6 +13,7 @@ class EventCheckin extends Model
     protected $fillable = [
         'event_id',
         'membership_id',
+        'role',
         'checked_in_by_user_id',
         'checked_in_at',
         'metadata',

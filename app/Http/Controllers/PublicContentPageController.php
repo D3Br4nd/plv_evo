@@ -18,6 +18,18 @@ class PublicContentPageController extends Controller
             'page' => $page,
         ]);
     }
+
+    public function showMember(string $slug)
+    {
+        $page = ContentPage::query()
+            ->where('slug', $slug)
+            ->where('status', 'published')
+            ->firstOrFail();
+
+        return Inertia::render('Member/ContentPage', [
+            'page' => $page,
+        ]);
+    }
 }
 
 

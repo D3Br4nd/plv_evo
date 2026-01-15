@@ -3,7 +3,7 @@
 	let {
 		ref = $bindable(null),
 		children,
-		class: className,
+		class: className = "",
 		...restProps
 	} = $props();
 </script>

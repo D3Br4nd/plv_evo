@@ -3,37 +3,47 @@
 	import * as Collapsible from "@/lib/components/ui/collapsible";
 	import { Link } from "@inertiajs/svelte";
 	import ChevronRightIcon from "@tabler/icons-svelte/icons/chevron-right";
-	
-	let { items } = $props();
+
+	let { items = [] } = $props();
 </script>
 
 <Sidebar.Group>
 	<Sidebar.GroupContent class="flex flex-col gap-2">
 		<Sidebar.Menu>
-			{#each items as item (item.title)}
+			{#each items as item (item.url || item.title)}
 				<Sidebar.MenuItem>
 					{#if item.items && item.items.length > 0}
 						<!-- Collapsible menu item with sub-items -->
 						<Collapsible.Root>
 							<Collapsible.Trigger asChild>
-								{#snippet child({ builder })}
-									<Sidebar.MenuButton {...builder} tooltipContent={item.title}>
+								{#snippet child({ props })}
+									<Sidebar.MenuButton
+										{...props}
+										tooltipContent={item.title}
+									>
 										{#if item.icon}
 											<item.icon />
 										{/if}
 										<span>{item.title}</span>
-										<ChevronRightIcon class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90" />
+										<ChevronRightIcon
+											class="ml-auto transition-transform duration-200 group-data-[state=open]/collapsible:rotate-90"
+										/>
 									</Sidebar.MenuButton>
 								{/snippet}
 							</Collapsible.Trigger>
 							<Collapsible.Content>
 								<Sidebar.MenuSub>
-									{#each item.items as subItem}
+									{#each item.items as subItem (subItem.url || subItem.title)}
 										<Sidebar.MenuSubItem>
 											<Sidebar.MenuSubButton asChild>
 												{#snippet child({ props })}
-													<Link href={subItem.url} {...props}>
-														<span>{subItem.title}</span>
+													<Link
+														href={subItem.url}
+														{...props}
+													>
+														<span
+															>{subItem.title}</span
+														>
 													</Link>
 												{/snippet}
 											</Sidebar.MenuSubButton>

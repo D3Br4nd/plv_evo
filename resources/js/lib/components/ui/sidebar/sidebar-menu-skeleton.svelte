@@ -3,7 +3,7 @@
 	import { Skeleton } from "@/lib/components/ui/skeleton/index.js";
 	let {
 		ref = $bindable(null),
-		class: className,
+		class: className = "",
 		showIcon = false,
 		children,
 		...restProps

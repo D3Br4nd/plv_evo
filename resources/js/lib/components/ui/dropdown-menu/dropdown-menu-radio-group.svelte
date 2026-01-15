@@ -3,7 +3,8 @@
 
 	let {
 		ref = $bindable(null),
-		value = $bindable(),
+		value = $bindable(""),
+		children,
 		...restProps
 	} = $props();
 </script>
@@ -13,4 +14,6 @@
 	bind:value
 	data-slot="dropdown-menu-radio-group"
 	{...restProps}
-/>
+>
+	{@render children?.()}
+</DropdownMenuPrimitive.RadioGroup>

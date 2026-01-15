@@ -3,7 +3,7 @@
   import { cn } from "@/lib/utils/cn";
 
   let {
-    class: className,
+    class: className = "",
     side = "right",
     children,
     ...rest

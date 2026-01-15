@@ -4,10 +4,11 @@
 	import { cn } from "@/lib/utils.js";
 	let {
 		ref = $bindable(null),
-		class: className,
+		class: className = "",
 		sideOffset = 4,
 		align = "center",
 		portalProps,
+		children,
 		...restProps
 	} = $props();
 </script>
@@ -23,5 +24,7 @@
 			className
 		)}
 		{...restProps}
-	/>
+	>
+		{@render children?.()}
+	</PopoverPrimitive.Content>
 </PopoverPortal>

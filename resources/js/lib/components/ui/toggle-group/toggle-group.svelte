@@ -17,8 +17,8 @@
 
 	let {
 		ref = $bindable(null),
-		value = $bindable(),
-		class: className,
+		value = $bindable(""),
+		class: className = "",
 		size = "default",
 		spacing = 0,
 		variant = "default",
@@ -37,7 +37,7 @@ Discriminated Unions + Destructing (required for bindable) do not
 get along, so we shut typescript up by casting `value` to `never`.
 -->
 <ToggleGroupPrimitive.Root
-	bind:value={value}
+	bind:value
 	bind:ref
 	data-slot="toggle-group"
 	data-variant={variant}
@@ -46,7 +46,7 @@ get along, so we shut typescript up by casting `value` to `never`.
 	style={`--gap: ${spacing}`}
 	class={cn(
 		"group/toggle-group flex w-fit items-center gap-[--spacing(var(--gap))] rounded-md data-[spacing=default]:data-[variant=outline]:shadow-xs",
-		className
+		className,
 	)}
 	{...restProps}
 />

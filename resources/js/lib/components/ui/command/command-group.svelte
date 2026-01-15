@@ -4,7 +4,7 @@
 
 	let {
 		ref = $bindable(null),
-		class: className,
+		class: className = "",
 		children,
 		heading,
 		value,
@@ -26,5 +26,7 @@
 			{heading}
 		</CommandPrimitive.GroupHeading>
 	{/if}
-	<CommandPrimitive.GroupItems {children} />
+	<CommandPrimitive.GroupItems>
+		{@render children?.()}
+	</CommandPrimitive.GroupItems>
 </CommandPrimitive.Group>

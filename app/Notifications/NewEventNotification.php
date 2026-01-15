@@ -55,13 +55,20 @@ class NewEventNotification extends Notification
      *
      * @return array<string, mixed>
      */
-    public function toArray(object $notifiable): array
+    public function toArray($notifiable): array
     {
+        $role = (isset($notifiable->role) && $notifiable->role instanceof \UnitEnum) 
+            ? $notifiable->role->value 
+            : ($notifiable->role ?? null);
+            
+        $isAdmin = in_array($role, ['super_admin', 'admin']);
+        $url = $isAdmin ? '/admin/events/' . $this->event->id : '/me/events/' . $this->event->id;
+
         return [
             'title' => $this->event->title,
             'body' => "L'evento \"" . $this->event->title . "\" è stato aggiunto al calendario per il " . $this->event->start_date->format('d/m/Y H:i') . ".",
             'event_id' => $this->event->id,
-            'url' => '/me/events/' . $this->event->id,
+            'url' => $url,
             'type' => 'event',
         ];
     }

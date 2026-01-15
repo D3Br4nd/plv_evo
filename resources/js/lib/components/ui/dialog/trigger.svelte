@@ -1,10 +1,14 @@
 <script lang="ts">
   import { Dialog } from "bits-ui";
-  let { children, ...rest } = $props<any>();
+  let { children, child, ...rest } = $props<any>();
 </script>
 
 <Dialog.Trigger {...rest}>
-  {@render children?.()}
+  {#snippet child({ props })}
+    {#if child}
+      {@render child({ props })}
+    {:else}
+      {@render children?.({ builder: props })}
+    {/if}
+  {/snippet}
 </Dialog.Trigger>
-
-

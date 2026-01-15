@@ -23,7 +23,8 @@ use Inertia\Inertia;
 Route::get('/', function () {
     if (auth()->check()) {
         $user = auth()->user();
-        $isAdmin = in_array($user->role, ['super_admin', 'admin'], true);
+        $roleValue = $user->role instanceof \UnitEnum ? $user->role->value : $user->role;
+        $isAdmin = in_array($roleValue, ['super_admin', 'admin'], true);
 
         // Mobile: default to the PWA/mobile UI unless the user explicitly opted into the admin UI.
         $ua = strtolower((string) request()->userAgent());
@@ -97,7 +98,15 @@ Route::get('/invite/{token}', [MemberInvitationAcceptController::class, 'show'])
 Route::post('/invite/{token}', [MemberInvitationAcceptController::class, 'store'])->name('invite.store');
 
 // Public content pages (published)
-Route::get('/p/{slug}', [PublicContentPageController::class, 'show'])->name('public.page');
+Route::get('/p/{slug}', function($slug) {
+    if (auth()->check()) {
+        return redirect('/me/content/' . $slug);
+    }
+    return (new \App\Http\Controllers\PublicContentPageController)->show($slug);
+})->name('public.page');
+
+// Member content pages (PWA)
+Route::middleware('auth')->get('/me/content/{slug}', [\App\Http\Controllers\PublicContentPageController::class, 'showMember'])->name('member.content');
 
 // Public legal pages
 Route::get('/privacy-policy', function () {
@@ -120,7 +129,7 @@ Route::get('/reset-password/{token}', [\App\Http\Controllers\PasswordResetContro
 Route::post('/reset-password', [\App\Http\Controllers\PasswordResetController::class, 'reset'])->name('password.update');
 
 // Admin routes (protected)
-Route::middleware(['auth', 'role:super_admin,admin'])->prefix('admin')->group(function () {
+Route::middleware(['auth', 'role:super_admin,admin', 'mobile.admin'])->prefix('admin')->group(function () {
     Route::get('/dashboard', AdminDashboardController::class)->name('admin.dashboard');
     
     // Activity log cleanup (super admin only)
@@ -169,6 +178,10 @@ Route::middleware(['auth', 'role:super_admin,admin'])->prefix('admin')->group(fu
         ->name('events.checkins.index');
     Route::post('events/{event}/checkins', [\App\Http\Controllers\AdminEventCheckinController::class, 'store'])
         ->name('events.checkins.store');
+    Route::patch('events/{event}/checkins/{checkin}', [\App\Http\Controllers\AdminEventCheckinController::class, 'update'])
+        ->name('events.checkins.update');
+    Route::delete('events/{event}/checkins/{checkin}', [\App\Http\Controllers\AdminEventCheckinController::class, 'destroy'])
+        ->name('events.checkins.destroy');
     Route::get('events/{event}/checkins/export', [\App\Http\Controllers\AdminEventCheckinController::class, 'exportCsv'])
         ->name('events.checkins.export');
     Route::resource('projects', \App\Http\Controllers\AdminProjectController::class);

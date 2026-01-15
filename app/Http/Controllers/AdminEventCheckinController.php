@@ -30,6 +30,7 @@ class AdminEventCheckinController extends Controller
     {
         $validated = $request->validate([
             'qr_code' => 'required|uuid',
+            'role' => 'nullable|string|max:255',
         ]);
 
         $eventYear = (int) $event->start_date->format('Y');
@@ -61,10 +62,11 @@ class AdminEventCheckinController extends Controller
             return redirect()->back()->with('error', 'Check-in già effettuato.');
         }
 
-        DB::transaction(function () use ($event, $membership, $request) {
+        DB::transaction(function () use ($event, $membership, $request, $validated) {
             EventCheckin::create([
                 'event_id' => $event->id,
                 'membership_id' => $membership->id,
+                'role' => $validated['role'] ?? null,
                 'checked_in_by_user_id' => $request->user()->id,
                 'checked_in_at' => now(),
                 'metadata' => [
@@ -75,6 +77,24 @@ class AdminEventCheckinController extends Controller
         });
 
         return redirect()->back()->with('success', 'Check-in registrato: '.$membership->user->name);
+    }
+
+    public function update(Request $request, Event $event, EventCheckin $checkin)
+    {
+        $validated = $request->validate([
+            'role' => 'nullable|string|max:255',
+        ]);
+
+        $checkin->update($validated);
+
+        return redirect()->back()->with('success', 'Ruolo aggiornato.');
+    }
+
+    public function destroy(Event $event, EventCheckin $checkin)
+    {
+        $checkin->delete();
+
+        return redirect()->back()->with('success', 'Check-in rimosso.');
     }
 
     public function exportCsv(Event $event)
@@ -89,6 +109,7 @@ class AdminEventCheckinController extends Controller
                     'checked_in_at' => optional($c->checked_in_at)->toDateTimeString(),
                     'member_name' => $c->membership?->user?->name,
                     'member_email' => $c->membership?->user?->email,
+                    'role' => $c->role,
                     'membership_year' => $c->membership?->year,
                     'checked_in_by' => $c->checkedInBy?->name,
                 ];
@@ -97,7 +118,7 @@ class AdminEventCheckinController extends Controller
         $filename = 'checkins-'.$event->id.'.csv';
 
         $handle = fopen('php://temp', 'w+');
-        fputcsv($handle, ['checked_in_at', 'member_name', 'member_email', 'membership_year', 'checked_in_by']);
+        fputcsv($handle, ['checked_in_at', 'member_name', 'member_email', 'role', 'membership_year', 'checked_in_by']);
         foreach ($rows as $row) {
             fputcsv($handle, $row);
         }

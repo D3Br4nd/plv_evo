@@ -9,7 +9,7 @@
 
 	let {
 		ref = $bindable(null),
-		class: className,
+		class: className = "",
 		hideLabel = false,
 		indicator = "dot",
 		hideIndicator = false,

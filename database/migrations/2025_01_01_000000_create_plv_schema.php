@@ -134,6 +134,7 @@ return new class extends Migration
             $table->uuid('id')->primary();
             $table->foreignUuid('event_id')->constrained()->cascadeOnDelete();
             $table->foreignUuid('membership_id')->constrained()->cascadeOnDelete();
+            $table->string('role')->nullable();
             $table->uuid('checked_in_by_user_id')->nullable();
             $table->timestamp('checked_in_at')->useCurrent();
             $table->json('metadata')->nullable();

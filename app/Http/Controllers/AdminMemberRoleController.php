@@ -15,9 +15,10 @@ class AdminMemberRoleController extends Controller
             'role' => 'required|string|in:super_admin,admin,member',
         ]);
 
-        // Admin users cannot demote a Super Admin.
-        // Super Admin may change themselves (including removing their own super_admin role if desired).
-        if ($member->role === 'super_admin' && $request->user()?->role !== 'super_admin') {
+        $memberRole = $member->role instanceof \UnitEnum ? $member->role->value : $member->role;
+        $userRole = $request->user()?->role instanceof \UnitEnum ? $request->user()->role->value : $request->user()?->role;
+
+        if ($memberRole === 'super_admin' && $userRole !== 'super_admin') {
             abort(403);
         }
 

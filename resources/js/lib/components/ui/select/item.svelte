@@ -4,7 +4,7 @@
   import Check from "lucide-svelte/dist/icons/check.svelte";
 
   // Shows a check indicator when selected via data attribute.
-  let { class: className, children, ...rest } = $props<any>();
+  let { class: className = "", children, ...rest } = $props<any>();
 </script>
 
 <Select.Item

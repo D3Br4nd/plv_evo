@@ -50,10 +50,11 @@ class AdminProjectController extends Controller
             $project->members()->sync($validated['members']);
         }
 
+        // Freshly load project members after sync
+        $project->load('members');
+
         // Notify Admins and Assigned Members
-        $admins = \App\Models\User::where('role', \App\Enums\UserRole::Admin->value)
-            ->orWhere('role', \App\Enums\UserRole::SuperAdmin->value)
-            ->get();
+        $admins = \App\Models\User::whereIn('role', [\App\Enums\UserRole::Admin->value, \App\Enums\UserRole::SuperAdmin->value])->get();
             
         $membersToNotify = $project->members;
         $usersToNotify = $admins->merge($membersToNotify)->unique('id');
@@ -96,18 +97,26 @@ class AdminProjectController extends Controller
         $project->update($validated);
 
         if ($request->has('members')) {
-            $project->members()->sync($validated['members'] ?? []);
+            $changes = $project->members()->sync($validated['members'] ?? []);
+            
+            // If members were added, notify them specifically if they weren't allerede in the notify list
+            $addedMemberIds = $changes['attached'];
+            if (!empty($addedMemberIds)) {
+                $addedMembers = \App\Models\User::whereIn('id', $addedMemberIds)->get();
+                $notification = new \App\Notifications\ProjectUpdateNotification($project, null, true);
+                foreach ($addedMembers as $member) {
+                    $member->notify($notification);
+                }
+            }
         }
 
         // Notify on status change
         if ($oldStatus !== $project->status) {
             $notification = new \App\Notifications\ProjectUpdateNotification($project, $oldStatus, false);
             
-            $admins = \App\Models\User::where('role', \App\Enums\UserRole::Admin->value)
-                ->orWhere('role', \App\Enums\UserRole::SuperAdmin->value)
-                ->get();
+            $admins = \App\Models\User::whereIn('role', [\App\Enums\UserRole::Admin->value, \App\Enums\UserRole::SuperAdmin->value])->get();
             
-            $membersToNotify = $project->members;
+            $membersToNotify = $project->members()->get(); // fresh members
             $usersToNotify = $admins->merge($membersToNotify)->unique('id');
             
             \Log::info('Sending project update notification', [

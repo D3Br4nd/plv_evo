@@ -3,7 +3,7 @@
   import { cn } from "@/lib/utils/cn";
 
   // Supports Bits UI "child" snippet for render delegation.
-  let { class: className, ...rest } = $props<any>();
+  let { class: className = "", ...rest } = $props<any>();
 </script>
 
 <DropdownMenu.Trigger

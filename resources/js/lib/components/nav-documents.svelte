@@ -7,25 +7,27 @@
 	import * as Sidebar from "@/lib/components/ui/sidebar/index.js";
 	import { Link } from "@inertiajs/svelte";
 
-	let { items } = $props();
+	let { items = [] } = $props();
 
 	const sidebar = Sidebar.useSidebar();
 </script>
 
 <Sidebar.Group class="group-data-[collapsible=icon]:hidden">
 	<Sidebar.Menu>
-		{#each items as item (item.name)}
+		{#each items as item (item.url || item.name)}
 			<Sidebar.MenuItem>
 				<Sidebar.MenuButton>
 					{#snippet child({ props })}
 						<Link {...props} href={item.url}>
-							<item.icon />
+							{#if item.icon}
+								<item.icon />
+							{/if}
 							<span>{item.name}</span>
 						</Link>
 					{/snippet}
 				</Sidebar.MenuButton>
 				<DropdownMenu.Root>
-					<DropdownMenu.Trigger>
+					<DropdownMenu.Trigger asChild>
 						{#snippet child({ props })}
 							<Sidebar.MenuAction
 								{...props}
@@ -43,16 +45,16 @@
 						align={sidebar.isMobile ? "end" : "start"}
 					>
 						<DropdownMenu.Item>
-							<FolderIcon />
+							<FolderIcon class="mr-2 h-4 w-4" />
 							<span>Apri</span>
 						</DropdownMenu.Item>
 						<DropdownMenu.Item>
-							<Share3Icon />
+							<Share3Icon class="mr-2 h-4 w-4" />
 							<span>Condividi</span>
 						</DropdownMenu.Item>
 						<DropdownMenu.Separator />
 						<DropdownMenu.Item variant="destructive">
-							<TrashIcon />
+							<TrashIcon class="mr-2 h-4 w-4" />
 							<span>Elimina</span>
 						</DropdownMenu.Item>
 					</DropdownMenu.Content>

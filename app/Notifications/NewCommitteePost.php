@@ -34,16 +34,15 @@ class NewCommitteePost extends Notification
     /**
      * Get the web push representation of the notification.
      */
-    public function toWebPush(object $notifiable, $notification): WebPushMessage
+    public function toWebPush($notifiable, $notification): WebPushMessage
     {
+        $data = $this->toArray($notifiable);
+
         return (new WebPushMessage)
-            ->title($this->post->title)
-            ->body($this->post->author->name . ' (Comitato ' . $this->post->committee->name . ')')
+            ->title($data['title'])
+            ->body($data['body'])
             ->icon('/favicon.png')
-            ->data([
-                'url' => '/me/committees/posts/' . $this->post->id,
-                'post_id' => $this->post->id,
-            ])
+            ->data(['url' => $data['url']])
             ->badge('/favicon.png');
     }
 
@@ -52,14 +51,25 @@ class NewCommitteePost extends Notification
      *
      * @return array<string, mixed>
      */
-    public function toArray(object $notifiable): array
+    public function toArray($notifiable): array
     {
+        $role = (isset($notifiable->role) && $notifiable->role instanceof \UnitEnum) 
+            ? $notifiable->role->value 
+            : ($notifiable->role ?? null);
+            
+        $isAdmin = in_array($role, ['super_admin', 'admin']);
+        
+        // In admin there is no "post show", but we use this pattern for the middleware to redirect to the PWA post view
+        $url = $isAdmin 
+            ? "/admin/committees/{$this->post->committee_id}/posts/{$this->post->id}" 
+            : "/me/committees/posts/{$this->post->id}";
+
         return [
             'title' => $this->post->title,
             'body' => $this->post->author->name . ' in ' . $this->post->committee->name,
             'post_id' => $this->post->id,
             'committee_id' => $this->post->committee_id,
-            'url' => '/me/committees/posts/' . $this->post->id,
+            'url' => $url,
             'type' => 'committee_post',
         ];
     }

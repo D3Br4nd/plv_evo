@@ -21,6 +21,7 @@ return Application::configure(basePath: dirname(__DIR__))
 
         $middleware->alias([
             'role' => \App\Http\Middleware\EnsureRole::class,
+            'mobile.admin' => \App\Http\Middleware\RedirectMobileAdmin::class,
         ]);
     })
     ->withProviders([

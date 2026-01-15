@@ -33,22 +33,15 @@ class NewBroadcastNotification extends Notification
     /**
      * Get the web push representation of the notification.
      */
-    public function toWebPush(object $notifiable, $notification): WebPushMessage
+    public function toWebPush($notifiable, $notification): WebPushMessage
     {
-        // Extract plain text from HTML content for the body
-        $plainBody = strip_tags($this->broadcast->content);
-        $shortBody = mb_strlen($plainBody) > 100 
-            ? mb_substr($plainBody, 0, 100) . '...' 
-            : $plainBody;
+        $data = $this->toArray($notifiable);
 
         return (new WebPushMessage)
-            ->title($this->broadcast->title)
-            ->body($shortBody)
+            ->title($data['title'])
+            ->body($data['body'])
             ->icon('/favicon.png')
-            ->data([
-                'url' => '/me/broadcasts/' . $this->broadcast->id,
-                'broadcast_id' => $this->broadcast->id,
-            ])
+            ->data(['url' => $data['url']])
             ->badge('/favicon.png');
     }
 
@@ -57,18 +50,25 @@ class NewBroadcastNotification extends Notification
      *
      * @return array<string, mixed>
      */
-    public function toArray(object $notifiable): array
+    public function toArray($notifiable): array
     {
         $plainBody = strip_tags($this->broadcast->content);
         $shortBody = mb_strlen($plainBody) > 100 
             ? mb_substr($plainBody, 0, 100) . '...' 
             : $plainBody;
 
+        $role = (isset($notifiable->role) && $notifiable->role instanceof \UnitEnum) 
+            ? $notifiable->role->value 
+            : ($notifiable->role ?? null);
+            
+        $isAdmin = in_array($role, ['super_admin', 'admin']);
+        $url = $isAdmin ? '/admin/broadcasts/' . $this->broadcast->id : '/me/broadcasts/' . $this->broadcast->id;
+
         return [
             'title' => $this->broadcast->title,
             'body' => $shortBody,
             'broadcast_id' => $this->broadcast->id,
-            'url' => '/me/broadcasts/' . $this->broadcast->id,
+            'url' => $url,
             'type' => 'broadcast',
             'has_image' => !empty($this->broadcast->featured_image_path),
             'has_attachment' => !empty($this->broadcast->attachment_path),

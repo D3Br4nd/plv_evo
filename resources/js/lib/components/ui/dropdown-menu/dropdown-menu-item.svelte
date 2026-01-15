@@ -4,9 +4,10 @@
 
 	let {
 		ref = $bindable(null),
-		class: className,
+		class: className = "",
 		inset,
 		variant = "default",
+		children,
 		...restProps
 	} = $props();
 </script>
@@ -21,4 +22,6 @@
 		className
 	)}
 	{...restProps}
-/>
+>
+	{@render children?.()}
+</DropdownMenuPrimitive.Item>

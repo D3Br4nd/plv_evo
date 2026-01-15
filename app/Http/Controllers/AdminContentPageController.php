@@ -50,7 +50,15 @@ class AdminContentPageController extends Controller
         ]);
 
 
-        return redirect()->route('content-pages.index')->with('success', 'Pagina creata.');
+        if ($page->status === 'published') {
+            $notification = new \App\Notifications\NewContentPageNotification($page);
+            // Notify all users? Or just admins for now?
+            // The user wants social/members notified too.
+            $users = \App\Models\User::all();
+            \Illuminate\Support\Facades\Notification::send($users, $notification);
+        }
+
+        return redirect()->route('content-pages.index')->with('success', 'Pagina creata e notifiche inviate.');
     }
 
     public function edit(ContentPage $content_page)
@@ -82,6 +90,14 @@ class AdminContentPageController extends Controller
             'updated_by_user_id' => $request->user()->id,
         ]);
 
+
+        $wasPublished = $content_page->wasChanged('status') && $content_page->status === 'published';
+
+        if ($wasPublished) {
+            $notification = new \App\Notifications\NewContentPageNotification($content_page);
+            $users = \App\Models\User::all();
+            \Illuminate\Support\Facades\Notification::send($users, $notification);
+        }
 
         return redirect()->route('content-pages.index')->with('success', 'Pagina aggiornata.');
     }

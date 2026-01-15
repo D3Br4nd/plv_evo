@@ -1,6 +1,6 @@
 <script lang="ts">
   import { cn } from "@/lib/utils/cn";
-  let { class: className, colspan, children } = $props<{
+  let { class: className = "", colspan, children } = $props<{
     class?: string;
     colspan?: number;
     children?: any;
